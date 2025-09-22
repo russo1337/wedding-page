@@ -199,3 +199,52 @@ fieldset legend {
   color: #7f1d1d;
   border-color: rgba(127, 29, 29, 0.18);
 }
+
+.hero {
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+  padding: 2.5rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 22px 44px rgba(18, 58, 50, 0.1);
+}
+
+.hero-text {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.hero-photo {
+  position: relative;
+  width: min(360px, 100%);
+  justify-self: center;
+}
+
+.hero-photo::after {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  border-radius: 32px;
+  background: radial-gradient(circle at top, rgba(31, 187, 164, 0.16), transparent 65%);
+  z-index: 0;
+}
+
+.hero-photo img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  border-radius: 28px;
+}
+
+@media (min-width: 880px) {
+  .hero {
+    grid-template-columns: 1.15fr 1fr;
+    padding: 3rem;
+  }
+
+  .hero-text {
+    gap: 1.75rem;
+  }
+}
