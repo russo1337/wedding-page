@@ -6,7 +6,8 @@ export default function RegisterForm({ eventOptions }) {
   const [form, setForm] = useState({
     fullName: "",
     email: "",
-    partySize: 1,
+    adults: 1,
+    children: 0,
     attending: [],
     message: ""
   });
@@ -43,7 +44,8 @@ export default function RegisterForm({ eventOptions }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          partySize: Number(form.partySize)
+          adults: Number(form.adults),
+          children: Number(form.children)
         })
       });
 
@@ -54,7 +56,7 @@ export default function RegisterForm({ eventOptions }) {
       }
 
       setFeedback({ type: "success", message: data?.message || "Anmeldung gespeichert." });
-      setForm({ fullName: "", email: "", partySize: 1, attending: [], message: "" });
+      setForm({ fullName: "", email: "", adults: 1, children: 0, attending: [], message: "" });
     } catch (error) {
       setFeedback({ type: "error", message: error.message });
     } finally {
@@ -88,17 +90,31 @@ export default function RegisterForm({ eventOptions }) {
         />
       </label>
 
-      <label>
-        Für wie viele Personen sagt ihr zu?
-        <input
-          type="number"
-          name="partySize"
-          min={1}
-          max={12}
-          value={form.partySize}
-          onChange={handleChange}
-        />
-      </label>
+      <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
+        <label>
+          Erwachsene
+          <input
+            type="number"
+            name="adults"
+            min={1}
+            max={12}
+            value={form.adults}
+            onChange={handleChange}
+            required
+          />
+        </label>
+        <label>
+          Kinder
+          <input
+            type="number"
+            name="children"
+            min={0}
+            max={12}
+            value={form.children}
+            onChange={handleChange}
+          />
+        </label>
+      </div>
 
       <fieldset>
         <legend>Bei welchen Programmpunkten seid ihr dabei?</legend>

@@ -12,7 +12,7 @@ async function appendRegistration(record) {
 
   const sheets = await getSheetsClient();
   const worksheet = process.env.GOOGLE_SHEETS_RESERVATION_WORKSHEET_NAME || "Registrations";
-  const range = `${worksheet}!A:G`;
+  const range = `${worksheet}!A:H`;
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
@@ -23,7 +23,8 @@ async function appendRegistration(record) {
         record.createdAt,
         record.fullName,
         record.email,
-        record.partySize,
+        record.adults,
+        record.children,
         record.attending.join(", "),
         record.message,
         record.id
@@ -38,19 +39,20 @@ export async function GET() {
 
 export async function POST(request) {
   const payload = await request.json();
-  const { fullName, email, partySize, attending, message } = payload;
+  const { fullName, email, adults, children, attending, message } = payload;
 
   const trimmedName = typeof fullName === "string" ? fullName.trim() : "";
   const trimmedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-  const size = Number(partySize) || 1;
+  const adultCount = Math.max(0, Number(adults) || 0);
+  const childCount = Math.max(0, Number(children) || 0);
   const attendingIds = Array.isArray(attending) ? attending : [];
 
   const validEventIds = new Set(eventOptions.map((option) => option.id));
   const invalidSelection = attendingIds.some((id) => !validEventIds.has(id));
 
-  if (!trimmedName || !trimmedEmail || invalidSelection || attendingIds.length === 0) {
+  if (!trimmedName || !trimmedEmail || invalidSelection || attendingIds.length === 0 || adultCount < 1) {
     return NextResponse.json(
-      { message: "Bitte gebt euren Namen, eure E-Mail-Adresse und mindestens einen Programmpunkt an." },
+      { message: "Bitte gebt euren Namen, eure E-Mail-Adresse, mindestens einen erwachsenen Gast und einen Programmpunkt an." },
       { status: 400 }
     );
   }
@@ -59,7 +61,8 @@ export async function POST(request) {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     fullName: trimmedName,
     email: trimmedEmail,
-    partySize: Math.max(1, Math.min(size, 12)),
+    adults: adultCount,
+    children: childCount,
     attending: attendingIds,
     message: typeof message === "string" ? message.trim() : "",
     createdAt: new Date().toISOString()
