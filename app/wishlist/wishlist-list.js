@@ -74,6 +74,31 @@ function formatPricePerPart(price, parts) {
   return `${valueWithCurrency} pro Anteil`;
 }
 
+function formatContributionTotal(price, totalParts, selectedParts) {
+  if (!price) {
+    return "";
+  }
+
+  const total = parseNumericPrice(price);
+  if (!Number.isFinite(total) || total <= 0) {
+    return "";
+  }
+
+  const parts = Math.max(1, selectedParts || 1);
+  const base = totalParts && totalParts > 0 ? total / totalParts : total;
+  const amount = Math.round(base * parts * 100) / 100;
+  const formattedValue = Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+  const { prefix, suffix } = extractCurrencyParts(price);
+
+  if (prefix) {
+    return `${prefix} ${formattedValue}`.trim();
+  }
+  if (suffix) {
+    return `${formattedValue} ${suffix}`.trim();
+  }
+  return formattedValue;
+}
+
 export default function WishlistList() {
   const [gifts, setGifts] = useState([]);
   const [pledges, setPledges] = useState({});
@@ -216,6 +241,8 @@ export default function WishlistList() {
               const pledge = pledges[gift.id] ? { ...pledges[gift.id] } : { ...EMPTY_PLEDGE };
               const priceLabel = gift.price ? gift.price : "";
               const pricePerPartLabel = gift.totalParts > 1 ? formatPricePerPart(gift.price, gift.totalParts) : "";
+              const selectedParts = Math.max(1, Math.min(gift.remainingParts || 1, Number(pledge.parts) || 1));
+              const contributionTotal = formatContributionTotal(gift.price, gift.totalParts, selectedParts);
               const partsLabel = gift.totalParts > 1
                 ? `${gift.remainingParts} von ${gift.totalParts} Anteil(en) verfügbar`
                 : isReserved
@@ -310,7 +337,11 @@ export default function WishlistList() {
                         onClick={() => reserveGift(gift.id)}
                         disabled={activeGift === gift.id}
                       >
-                        {activeGift === gift.id ? "Reservierung läuft..." : "Geschenk reservieren"}
+                        {activeGift === gift.id
+                          ? "Reservierung läuft..."
+                          : contributionTotal
+                            ? `Geschenk reservieren - ${contributionTotal}`
+                            : "Geschenk reservieren"}
                       </button>
                     </>
                   )}
