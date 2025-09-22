@@ -176,6 +176,10 @@ export async function POST(request) {
   }
 
   const trimmedName = typeof name === "string" ? name.trim() : "";
+  if (!trimmedName) {
+    return NextResponse.json({ message: "Bitte gebt euren Namen für diese Reservierung an." }, { status: 400 });
+  }
+
   const trimmedMessage = typeof message === "string" ? message.trim() : "";
   const requestedParts = Math.max(1, Math.round(toNumber(parts) || 1));
 
@@ -225,7 +229,7 @@ export async function POST(request) {
       giftId: target.id,
       giftTitle: target.title,
       parts: requestedParts,
-      name: trimmedName || "Ein lieber Gast",
+      name: trimmedName,
       message: trimmedMessage
     });
 

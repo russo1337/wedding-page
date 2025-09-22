@@ -5,6 +5,75 @@ import { useEffect, useMemo, useState } from "react";
 const EMPTY_PLEDGE = { name: "", message: "", parts: 1 };
 const FALLBACK_CATEGORY = "Weitere Wünsche";
 
+function parseNumericPrice(price) {
+  if (!price) {
+    return null;
+  }
+
+  const digitsOnly = price.toString().replace(/[^0-9.,'\-]/g, "").replace(/'/g, "");
+  if (!digitsOnly) {
+    return null;
+  }
+
+  const commaIndex = digitsOnly.lastIndexOf(",");
+  const dotIndex = digitsOnly.lastIndexOf(".");
+  let normalized = digitsOnly;
+
+  if (commaIndex > -1 && dotIndex > -1) {
+    if (commaIndex > dotIndex) {
+      normalized = normalized.replace(/\./g, "").replace(/,/g, ".");
+    } else {
+      normalized = normalized.replace(/,/g, "");
+    }
+  } else if (commaIndex > -1) {
+    normalized = normalized.replace(/,/g, ".");
+  } else {
+    normalized = normalized.replace(/,/g, "");
+  }
+
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
+}
+
+function extractCurrencyParts(price) {
+  const trimmed = price?.trim?.() ?? "";
+  if (!trimmed) {
+    return { prefix: "", suffix: "" };
+  }
+
+  const prefixMatch = trimmed.match(/^[^\d-]+/);
+  const suffixMatch = trimmed.match(/[^\d.,\s]+$/);
+
+  const prefix = prefixMatch ? prefixMatch[0].trim() : "";
+  const suffix = suffixMatch && (!prefix || suffixMatch[0].trim() !== prefix) ? suffixMatch[0].trim() : "";
+
+  return { prefix, suffix };
+}
+
+function formatPricePerPart(price, parts) {
+  if (!price || parts <= 1) {
+    return "";
+  }
+
+  const total = parseNumericPrice(price);
+  if (!Number.isFinite(total) || total <= 0) {
+    return "";
+  }
+
+  const perPart = total / parts;
+  const rounded = Math.round(perPart * 100) / 100;
+  const formattedValue = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+  const { prefix, suffix } = extractCurrencyParts(price);
+
+  const valueWithCurrency = prefix
+    ? `${prefix} ${formattedValue}`.trim()
+    : suffix
+      ? `${formattedValue} ${suffix}`.trim()
+      : formattedValue;
+
+  return `${valueWithCurrency} pro Anteil`;
+}
+
 export default function WishlistList() {
   const [gifts, setGifts] = useState([]);
   const [pledges, setPledges] = useState({});
@@ -83,6 +152,13 @@ export default function WishlistList() {
       }
 
       const pledge = pledges[giftId] ? { ...pledges[giftId] } : { ...EMPTY_PLEDGE };
+      const trimmedName = (pledge.name ?? "").trim();
+      if (!trimmedName) {
+        setFeedback({ type: "error", message: "Bitte gebt euren Namen an, damit wir euch danken können." });
+        setActiveGift(null);
+        return;
+      }
+
       const requestedParts = Math.max(1, Math.min(gift.remainingParts || 1, Number(pledge.parts) || 1));
 
       const response = await fetch("/api/wishlist", {
@@ -90,7 +166,7 @@ export default function WishlistList() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           giftId,
-          name: pledge.name,
+          name: trimmedName,
           message: pledge.message,
           parts: requestedParts
         })
@@ -139,6 +215,7 @@ export default function WishlistList() {
               const isReserved = gift.remainingParts === 0;
               const pledge = pledges[gift.id] ? { ...pledges[gift.id] } : { ...EMPTY_PLEDGE };
               const priceLabel = gift.price ? gift.price : "";
+              const pricePerPartLabel = gift.totalParts > 1 ? formatPricePerPart(gift.price, gift.totalParts) : "";
               const partsLabel = gift.totalParts > 1
                 ? `${gift.remainingParts} von ${gift.totalParts} Anteil(en) verfügbar`
                 : isReserved
@@ -157,7 +234,32 @@ export default function WishlistList() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
                     <span className="tag">{partsLabel}</span>
                     <h3>{gift.title}</h3>
-                    {priceLabel ? <strong>{priceLabel}</strong> : null}
+                    {priceLabel ? (
+                      <strong>
+                        {pricePerPartLabel ? (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              flexDirection: "column",
+                              gap: "0.2rem",
+                              fontWeight: 600,
+                              lineHeight: 1.2
+                            }}
+                          >
+                            <span>{priceLabel}</span>
+                            <span
+                              style={{
+                                fontSize: "0.85rem",
+                                fontWeight: 500,
+                                color: "rgba(47, 26, 26, 0.75)"
+                              }}
+                            >
+                              {pricePerPartLabel}
+                            </span>
+                          </span>
+                        ) : priceLabel}
+                      </strong>
+                    ) : null}
                     <p>{gift.description}</p>
                     {gift.url ? (
                       <a href={gift.url} target="_blank" rel="noreferrer" style={{ fontSize: "0.95rem" }}>
@@ -173,12 +275,13 @@ export default function WishlistList() {
                   ) : (
                     <>
                       <label>
-                        Euer Name (optional)
+                        Euer Name (erforderlich)
                         <input
                           type="text"
                           value={pledge.name}
                           onChange={(event) => updatePledge(gift.id, "name", event.target.value)}
-                          placeholder="Wie dürfen wir uns bedanken?"
+                          placeholder="Vor- und Nachname"
+                          required
                         />
                       </label>
                       <label>
