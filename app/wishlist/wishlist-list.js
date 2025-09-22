@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const EMPTY_PLEDGE = { name: "", message: "", parts: 1 };
+const FALLBACK_CATEGORY = "Weitere Wünsche";
 
 export default function WishlistList() {
   const [gifts, setGifts] = useState([]);
@@ -18,6 +21,7 @@ export default function WishlistList() {
       }
       const data = await response.json();
       setGifts(data?.gifts ?? []);
+      setFeedback(null);
     } catch (error) {
       setFeedback({ type: "error", message: error.message });
     } finally {
@@ -30,28 +34,65 @@ export default function WishlistList() {
   }, []);
 
   const updatePledge = (giftId, field, value) => {
-    setPledges((current) => ({
-      ...current,
-      [giftId]: {
-        ...(current[giftId] ?? {}),
-        [field]: value
+    setPledges((current) => {
+      const existing = current[giftId] ? { ...current[giftId] } : { ...EMPTY_PLEDGE };
+      let nextValue = value;
+
+      if (field === "parts") {
+        const parsed = Number(value);
+        nextValue = Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
       }
-    }));
+
+      return {
+        ...current,
+        [giftId]: {
+          ...existing,
+          [field]: nextValue
+        }
+      };
+    });
   };
+
+  const groupedGifts = useMemo(() => {
+    const groups = new Map();
+
+    gifts.forEach((gift) => {
+      const groupKey = gift.category?.trim() || FALLBACK_CATEGORY;
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, []);
+      }
+      groups.get(groupKey).push(gift);
+    });
+
+    return Array.from(groups.entries())
+      .map(([category, items]) => ({
+        category,
+        items: items.slice().sort((a, b) => a.title.localeCompare(b.title, "de"))
+      }))
+      .sort((a, b) => a.category.localeCompare(b.category, "de"));
+  }, [gifts]);
 
   const reserveGift = async (giftId) => {
     setFeedback(null);
     setActiveGift(giftId);
 
     try {
-      const reservation = pledges[giftId] ?? {};
+      const gift = gifts.find((entry) => entry.id === giftId);
+      if (!gift) {
+        throw new Error("Geschenk wurde nicht gefunden.");
+      }
+
+      const pledge = pledges[giftId] ? { ...pledges[giftId] } : { ...EMPTY_PLEDGE };
+      const requestedParts = Math.max(1, Math.min(gift.remainingParts || 1, Number(pledge.parts) || 1));
+
       const response = await fetch("/api/wishlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           giftId,
-          name: reservation.name,
-          message: reservation.message
+          name: pledge.name,
+          message: pledge.message,
+          parts: requestedParts
         })
       });
 
@@ -62,7 +103,10 @@ export default function WishlistList() {
       }
 
       setFeedback({ type: "success", message: data?.message || "Geschenk reserviert." });
-      // refresh list to reflect reservation state
+      setPledges((current) => ({
+        ...current,
+        [giftId]: { ...EMPTY_PLEDGE }
+      }));
       await fetchGifts();
     } catch (error) {
       setFeedback({ type: "error", message: error.message });
@@ -75,7 +119,7 @@ export default function WishlistList() {
     return <p>Wunschliste wird geladen...</p>;
   }
 
-  if (!loading && gifts.length === 0) {
+  if (!loading && groupedGifts.length === 0) {
     return <p>Die Wunschliste ist momentan leer. Schaut bald wieder vorbei!</p>;
   }
 
@@ -86,57 +130,93 @@ export default function WishlistList() {
           {feedback.message}
         </div>
       )}
-      <div className="card-grid">
-        {gifts.map((gift) => {
-          const isReserved = Boolean(gift.reservedBy);
-          const pledge = pledges[gift.id] ?? { name: "", message: "" };
 
-          return (
-            <article key={gift.id} className="card">
-              <div>
-                <span className="tag">{gift.cost}</span>
-              </div>
-              <h3>{gift.title}</h3>
-              <p>{gift.description}</p>
+      {groupedGifts.map(({ category, items }) => (
+        <section key={category} style={{ display: "grid", gap: "1.8rem" }}>
+          <h2>{category}</h2>
+          <div className="card-grid">
+            {items.map((gift) => {
+              const isReserved = gift.remainingParts === 0;
+              const pledge = pledges[gift.id] ? { ...pledges[gift.id] } : { ...EMPTY_PLEDGE };
+              const priceLabel = gift.price ? gift.price : "";
+              const partsLabel = gift.totalParts > 1
+                ? `${gift.remainingParts} von ${gift.totalParts} Anteil(en) verfügbar`
+                : isReserved
+                  ? "Bereits reserviert"
+                  : "Noch verfügbar";
 
-              {isReserved ? (
-                <p style={{ fontStyle: "italic", color: "rgba(47, 26, 26, 0.7)" }}>
-                  Reserviert von {gift.reservedBy}
-                  {gift.note ? ` - "${gift.note}"` : ""}
-                </p>
-              ) : (
-                <>
-                  <label>
-                    Euer Name (optional)
-                    <input
-                      type="text"
-                      value={pledge.name}
-                      onChange={(event) => updatePledge(gift.id, "name", event.target.value)}
-                      placeholder="Wie dürfen wir uns bedanken?"
+              return (
+                <article key={gift.id} className="card" style={{ display: "grid", gap: "0.8rem" }}>
+                  {gift.imageUrl ? (
+                    <img
+                      src={gift.imageUrl}
+                      alt={gift.title}
+                      style={{ width: "100%", borderRadius: "0.6rem", objectFit: "cover", maxHeight: "14rem" }}
                     />
-                  </label>
-                  <label>
-                    Nachricht (optional)
-                    <textarea
-                      rows={3}
-                      value={pledge.message}
-                      onChange={(event) => updatePledge(gift.id, "message", event.target.value)}
-                      placeholder="Hinterlasst uns eine Nachricht"
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => reserveGift(gift.id)}
-                    disabled={activeGift === gift.id}
-                  >
-                    {activeGift === gift.id ? "Reservierung läuft..." : "Geschenk reservieren"}
-                  </button>
-                </>
-              )}
-            </article>
-          );
-        })}
-      </div>
+                  ) : null}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                    <span className="tag">{partsLabel}</span>
+                    <h3>{gift.title}</h3>
+                    {priceLabel ? <strong>{priceLabel}</strong> : null}
+                    <p>{gift.description}</p>
+                    {gift.url ? (
+                      <a href={gift.url} target="_blank" rel="noreferrer" style={{ fontSize: "0.95rem" }}>
+                        Mehr erfahren
+                      </a>
+                    ) : null}
+                  </div>
+
+                  {isReserved ? (
+                    <p style={{ fontStyle: "italic", color: "rgba(47, 26, 26, 0.7)" }}>
+                      Dieses Geschenk wurde bereits vollständig reserviert.
+                    </p>
+                  ) : (
+                    <>
+                      <label>
+                        Euer Name (optional)
+                        <input
+                          type="text"
+                          value={pledge.name}
+                          onChange={(event) => updatePledge(gift.id, "name", event.target.value)}
+                          placeholder="Wie dürfen wir uns bedanken?"
+                        />
+                      </label>
+                      <label>
+                        Nachricht (optional)
+                        <textarea
+                          rows={3}
+                          value={pledge.message}
+                          onChange={(event) => updatePledge(gift.id, "message", event.target.value)}
+                          placeholder="Hinterlasst uns eine Nachricht"
+                        />
+                      </label>
+                      {gift.totalParts > 1 ? (
+                        <label>
+                          Anzahl Anteile
+                          <input
+                            type="number"
+                            min={1}
+                            max={gift.remainingParts}
+                            value={pledge.parts}
+                            onChange={(event) => updatePledge(gift.id, "parts", event.target.value)}
+                          />
+                        </label>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => reserveGift(gift.id)}
+                        disabled={activeGift === gift.id}
+                      >
+                        {activeGift === gift.id ? "Reservierung läuft..." : "Geschenk reservieren"}
+                      </button>
+                    </>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ))}
     </>
   );
 }

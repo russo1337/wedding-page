@@ -37,11 +37,23 @@ A Next.js wedding website that includes RSVP registration, event selections, and
    GOOGLE_SERVICE_ACCOUNT_EMAIL=service-account@project.iam.gserviceaccount.com
    GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
    GOOGLE_SHEETS_SPREADSHEET_ID=your-sheet-id
-   GOOGLE_SHEETS_WORKSHEET_NAME=Registrations
+   GOOGLE_SHEETS_RESERVATION_WORKSHEET_NAME=Registrations
+   GOOGLE_SHEETS_WISHLIST_WORKSHEET_NAME=Wishlist
+   GOOGLE_SHEETS_WISHLIST_LOG_WORKSHEET_NAME=Wishlist_Log
    ```
    - The sheet ID is the part between `/d/` and `/edit` in the Google Sheets URL.
-   - `GOOGLE_SHEETS_WORKSHEET_NAME` is optional; it defaults to `Registrations` if left empty.
+   - `GOOGLE_SHEETS_RESERVATION_WORKSHEET_NAME` is used for RSVPs; `GOOGLE_SHEETS_WISHLIST_WORKSHEET_NAME` points to the wishlist tab; `GOOGLE_SHEETS_WISHLIST_LOG_WORKSHEET_NAME` is optional and only needed if you want to track every gift reservation in a separate sheet.
 5. Restart the development server so Next.js picks up the new environment variables, then submit a test RSVP to confirm a new row appears in the sheet.
+
+### Wishlist sheet layout
+Create a worksheet (e.g. `Wishlist`) with the following header row:
+
+```
+id	category	title	description	price	parts	payed	url	imageUrl
+```
+
+- `parts` describes how many contributions are available for the gift. `payed` tracks how many parts have already been reserved.
+- The wishlist API updates the `payed` column when someone reserves a gift. If you set `GOOGLE_SHEETS_WISHLIST_LOG_WORKSHEET_NAME`, each reservation is also appended to that sheet with timestamp, guest name, message, and the number of parts reserved.
 
 ## Next steps
 - Connect `/api/register` and `/api/wishlist` to a real database or third-party service

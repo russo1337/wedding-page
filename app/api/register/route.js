@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
-import { google } from "googleapis";
 import { eventOptions } from "@/lib/data";
+import { getSheetsClient } from "@/lib/googleSheets";
 
 const registrations = [];
-
-const sheetsAuth = new google.auth.GoogleAuth({
-  credentials: {
-    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n")
-  },
-  scopes: ["https://www.googleapis.com/auth/spreadsheets"]
-});
 
 async function appendRegistration(record) {
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
@@ -18,10 +10,8 @@ async function appendRegistration(record) {
     throw new Error("Missing GOOGLE_SHEETS_SPREADSHEET_ID environment variable.");
   }
 
-  const authClient = await sheetsAuth.getClient();
-  const sheets = google.sheets({ version: "v4", auth: authClient });
-
-  const worksheet = process.env.GOOGLE_SHEETS_WORKSHEET_NAME || "Registrations";
+  const sheets = await getSheetsClient();
+  const worksheet = process.env.GOOGLE_SHEETS_RESERVATION_WORKSHEET_NAME || "Registrations";
   const range = `${worksheet}!A:G`;
 
   await sheets.spreadsheets.values.append({
