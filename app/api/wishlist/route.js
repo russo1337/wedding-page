@@ -38,6 +38,10 @@ function columnLetterFromIndex(index) {
   return columnName;
 }
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value ?? "");
+}
+
 async function loadWishlistSheet() {
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
   if (!spreadsheetId) {
@@ -136,7 +140,7 @@ async function appendWishlistLog(entry) {
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: `${logWorksheet}!A:F`,
+      range: `${logWorksheet}!A:G`,
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: [[
@@ -145,6 +149,7 @@ async function appendWishlistLog(entry) {
           entry.giftTitle,
           entry.parts,
           entry.name,
+          entry.email,
           entry.message
         ]]
       }
@@ -169,19 +174,23 @@ export async function GET() {
 
 export async function POST(request) {
   const payload = await request.json();
-  const { giftId, name, message, parts } = payload;
+  const { giftId, name, email, message, parts } = payload;
 
   if (!giftId) {
     return NextResponse.json({ message: "Geschenk-ID fehlt." }, { status: 400 });
   }
 
   const trimmedName = typeof name === "string" ? name.trim() : "";
-  if (!trimmedName) {
-    return NextResponse.json({ message: "Bitte gebt euren Namen für diese Reservierung an." }, { status: 400 });
-  }
-
+  const trimmedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
   const trimmedMessage = typeof message === "string" ? message.trim() : "";
   const requestedParts = Math.max(1, Math.round(toNumber(parts) || 1));
+
+  if (!trimmedName || !isValidEmail(trimmedEmail)) {
+    return NextResponse.json(
+      { message: "Bitte gebt euren Namen und eine gültige E-Mail-Adresse an." },
+      { status: 400 }
+    );
+  }
 
   try {
     const { spreadsheetId, worksheetName, gifts, columnIndices } = await loadWishlistSheet();
@@ -230,6 +239,7 @@ export async function POST(request) {
       giftTitle: target.title,
       parts: requestedParts,
       name: trimmedName,
+      email: trimmedEmail,
       message: trimmedMessage
     });
 

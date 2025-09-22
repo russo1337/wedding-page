@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const EMPTY_PLEDGE = { name: "", message: "", parts: 1 };
+const EMPTY_PLEDGE = { name: "", email: "", message: "", parts: 1 };
 const FALLBACK_CATEGORY = "Weitere Wünsche";
 
 function parseNumericPrice(price) {
@@ -99,6 +99,10 @@ function formatContributionTotal(price, totalParts, selectedParts) {
   return formattedValue;
 }
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 export default function WishlistList() {
   const [gifts, setGifts] = useState([]);
   const [pledges, setPledges] = useState({});
@@ -176,10 +180,12 @@ export default function WishlistList() {
         throw new Error("Geschenk wurde nicht gefunden.");
       }
 
-      const pledge = pledges[giftId] ? { ...pledges[giftId] } : { ...EMPTY_PLEDGE };
+      const pledge = pledges[gift.id] ? { ...pledges[gift.id] } : { ...EMPTY_PLEDGE };
       const trimmedName = (pledge.name ?? "").trim();
-      if (!trimmedName) {
-        setFeedback({ type: "error", message: "Bitte gebt euren Namen an, damit wir euch danken können." });
+      const trimmedEmail = (pledge.email ?? "").trim();
+
+      if (!trimmedName || !trimmedEmail || !isValidEmail(trimmedEmail)) {
+        setFeedback({ type: "error", message: "Bitte gebt Name und eine gültige E-Mail-Adresse an." });
         setActiveGift(null);
         return;
       }
@@ -192,6 +198,7 @@ export default function WishlistList() {
         body: JSON.stringify({
           giftId,
           name: trimmedName,
+          email: trimmedEmail,
           message: pledge.message,
           parts: requestedParts
         })
@@ -206,7 +213,7 @@ export default function WishlistList() {
       setFeedback({ type: "success", message: data?.message || "Geschenk reserviert." });
       setPledges((current) => ({
         ...current,
-        [giftId]: { ...EMPTY_PLEDGE }
+        [gift.id]: { ...EMPTY_PLEDGE }
       }));
       await fetchGifts();
     } catch (error) {
@@ -308,6 +315,16 @@ export default function WishlistList() {
                           value={pledge.name}
                           onChange={(event) => updatePledge(gift.id, "name", event.target.value)}
                           placeholder="Vor- und Nachname"
+                          required
+                        />
+                      </label>
+                      <label>
+                        E-Mail-Adresse (erforderlich)
+                        <input
+                          type="email"
+                          value={pledge.email}
+                          onChange={(event) => updatePledge(gift.id, "email", event.target.value)}
+                          placeholder="ihr@example.com"
                           required
                         />
                       </label>
