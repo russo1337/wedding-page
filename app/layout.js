@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
         <footer>
           <div>
             <span>Wir können es kaum erwarten, mit euch zu feiern!</span>
-            <span>20. September 2026 - Südhalde 1, 8586 Ennetaach, Schweiz</span>
+            <span>Familie Russo - Südhalde 1, 8586 Ennetaach</span>
           </div>
         </footer>
       </body>
