@@ -8,7 +8,7 @@ export default function HomePage() {
         <span className="tag">20.09.2026</span>
         <h1>Wir heiraten!</h1>
         <p>
-          Feiert mit uns, Sandra und Riccardo Russo, ein Wochenende voller Liebe, Lachen und Erinnerungen in Ennetaach.
+          Feiert mit uns, Sandra und Riccardo Russo, ein Wochenende voller Liebe, Lachen und Erinnerungen in Zihlschlacht.
           Meldet euch bitte an und schaut euch unsere Wunschliste an, wenn ihr uns mit einer Aufmerksamkeit überraschen möchtet.
         </p>
         <div className="cta-group">
@@ -23,7 +23,8 @@ export default function HomePage() {
           {weddingEvents.map((event) => (
             <article key={event.id} className="card">
               <h3>{event.title}</h3>
-              <p>{`${event.day} - ${event.time} - ${event.location}`}</p>
+              <p>{`${event.day} - ${event.time}`}</p>
+              <p>{`${event.location}`}</p>
               <p>{event.summary}</p>
             </article>
           ))}
@@ -32,3 +33,4 @@ export default function HomePage() {
     </>
   );
 }
+
