@@ -1,7 +1,34 @@
 import { NextResponse } from "next/server";
 import { getSheetsClient } from "@/lib/googleSheets";
+import { renderContributionEmail } from "@/emails/contribution-template";
 
 const DEFAULT_WISHLIST_WORKSHEET = "Wishlist";
+
+async function sendContributionEmail({ to, subject, html }) {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD || !process.env.EMAIL_FROM) {
+    console.warn("Email credentials missing; skip sending email.");
+    return;
+  }
+
+  const nodemailer = await import("nodemailer");
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD
+    }
+  });
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to,
+    subject,
+    html
+  });
+}
 
 function normaliseKey(value) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
@@ -244,6 +271,34 @@ export async function POST(request) {
     });
 
     const remainingParts = Math.max(0, target.totalParts - newContributedParts);
+
+    const contributionAmount = (() => {
+      if (!target.price) return "";
+      const numeric = parseFloat(target.price.replace(/[^0-9.,-]/g, "").replace(/,(?=\d{3}(\D|$))/g, "").replace(",", "."));
+      if (!Number.isFinite(numeric)) return "";
+      const share = target.totalParts > 0 ? numeric / target.totalParts : numeric;
+      return `${Math.round(share * requestedParts * 100) / 100} ${target.price.replace(/[^A-Za-z]+/g, "")}`;
+    })();
+
+    try {
+      const html = renderContributionEmail({
+        recipientName: trimmedName,
+        recipientEmail: trimmedEmail,
+        giftTitle: target.title,
+        parts: requestedParts,
+        contributionAmount,
+        eventDate: target?.eventDate,
+        message: trimmedMessage
+      });
+
+      await sendContributionEmail({
+        to: trimmedEmail,
+        subject: "Vielen Dank für euren Beitrag",
+        html
+      });
+    } catch (emailError) {
+      console.error("Failed to send confirmation email", emailError);
+    }
 
     return NextResponse.json({
       message: "Vielen Dank für eure Reservierung!",
