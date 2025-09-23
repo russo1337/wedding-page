@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="ringOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8becc5" />
+      <stop offset="100%" stop-color="#1fbba4" />
+    </linearGradient>
+    <linearGradient id="ringInner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#dffbf0" stop-opacity="0.2" />
+    </linearGradient>
+  </defs>
+  <g filter="url(#shadow)" transform="translate(20,18)">
+    <path d="M68 14c-20 0-36 16-36 36s16 36 36 36 36-16 36-36c0-10-4-19-11-26l-7 6c5 5 8 12 8 20 0 16-13 28-28 28s-28-13-28-28 13-28 28-28c6 0 12 2 17 6l6-7c-7-6-17-9-26-9z" fill="url(#ringOuter)" />
+    <path d="M98 6c-20 0-36 16-36 36 0 9 3 18 10 24l7-5c-5-5-7-11-7-18 0-16 13-28 28-28s28 13 28 28-13 28-28 28c-4 0-9-1-13-3l-5 8c5 3 11 4 18 4 20 0 36-16 36-36S118 6 98 6z" fill="url(#ringOuter)" opacity="0.75" />
+    <path d="M92 12c-15 0-28 13-28 28 0 6 2 11 5 16l6-4c-2-4-4-8-4-12 0-13 10-24 24-24 5 0 9 1 13 4l4-6c-5-4-12-6-20-6z" fill="url(#ringInner)" />
+  </g>
+</svg>
