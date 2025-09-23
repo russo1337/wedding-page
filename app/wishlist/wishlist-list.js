@@ -106,7 +106,7 @@ function isValidEmail(value) {
 export default function WishlistList() {
   const [gifts, setGifts] = useState([]);
   const [pledges, setPledges] = useState({});
-  const [feedback, setFeedback] = useState(null);
+  const [feedback, setFeedback] = useState(null); // { type, message, giftId }
   const [loading, setLoading] = useState(true);
   const [activeGift, setActiveGift] = useState(null);
 
@@ -121,7 +121,7 @@ export default function WishlistList() {
       setGifts(data?.gifts ?? []);
       setFeedback(null);
     } catch (error) {
-      setFeedback({ type: "error", message: error.message });
+      setFeedback({ type: "error", message: error.message, giftId: null });
     } finally {
       setLoading(false);
     }
@@ -185,7 +185,7 @@ export default function WishlistList() {
       const trimmedEmail = (pledge.email ?? "").trim();
 
       if (!trimmedName || !trimmedEmail || !isValidEmail(trimmedEmail)) {
-        setFeedback({ type: "error", message: "Bitte gebt Name und eine gültige E-Mail-Adresse an." });
+        setFeedback({ type: "error", message: "Bitte gebt Name und eine gültige E-Mail-Adresse an.", giftId: gift.id });
         setActiveGift(null);
         return;
       }
@@ -210,14 +210,14 @@ export default function WishlistList() {
         throw new Error(data?.message || "Wir konnten dieses Geschenk nicht reservieren.");
       }
 
-      setFeedback({ type: "success", message: data?.message || "Geschenk reserviert." });
       setPledges((current) => ({
         ...current,
         [gift.id]: { ...EMPTY_PLEDGE }
       }));
       await fetchGifts();
+      setFeedback({ type: "success", message: data?.message || "Geschenk reserviert.", giftId: gift.id });
     } catch (error) {
-      setFeedback({ type: "error", message: error.message });
+      setFeedback({ type: "error", message: error.message, giftId: giftId });
     } finally {
       setActiveGift(null);
     }
@@ -233,7 +233,7 @@ export default function WishlistList() {
 
   return (
     <>
-      {feedback && (
+      {feedback && feedback.giftId == null && (
         <div className={`feedback${feedback.type === "error" ? " error" : ""}`}>
           {feedback.message}
         </div>
@@ -255,6 +255,8 @@ export default function WishlistList() {
                 : isReserved
                   ? "Bereits reserviert"
                   : "Noch verfügbar";
+
+              const giftFeedback = feedback && feedback.giftId === gift.id ? feedback : null;
 
               return (
                 <article key={gift.id} className="card" style={{ display: "grid", gap: "0.8rem" }}>
@@ -285,7 +287,7 @@ export default function WishlistList() {
                               style={{
                                 fontSize: "0.85rem",
                                 fontWeight: 500,
-                                color: "rgba(47, 26, 26, 0.75)"
+                                color: "rgba(18, 58, 50, 0.75)"
                               }}
                             >
                               {pricePerPartLabel}
@@ -303,7 +305,7 @@ export default function WishlistList() {
                   </div>
 
                   {isReserved ? (
-                    <p style={{ fontStyle: "italic", color: "rgba(47, 26, 26, 0.7)" }}>
+                    <p style={{ fontStyle: "italic", color: "rgba(18, 58, 50, 0.6)" }}>
                       Dieses Geschenk wurde bereits vollständig reserviert.
                     </p>
                   ) : (
@@ -337,18 +339,16 @@ export default function WishlistList() {
                           placeholder="Hinterlasst uns eine Nachricht"
                         />
                       </label>
-                      {gift.totalParts > 1 ? (
-                        <label>
-                          Anzahl Anteile
-                          <input
-                            type="number"
-                            min={1}
-                            max={gift.remainingParts}
-                            value={pledge.parts}
-                            onChange={(event) => updatePledge(gift.id, "parts", event.target.value)}
-                          />
-                        </label>
-                      ) : null}
+                      <label>
+                        Anzahl Anteile
+                        <input
+                          type="number"
+                          min={1}
+                          max={gift.remainingParts}
+                          value={pledge.parts}
+                          onChange={(event) => updatePledge(gift.id, "parts", event.target.value)}
+                        />
+                      </label>
                       <button
                         type="button"
                         onClick={() => reserveGift(gift.id)}
@@ -362,6 +362,12 @@ export default function WishlistList() {
                       </button>
                     </>
                   )}
+
+                  {giftFeedback && (
+                    <div className={`feedback${giftFeedback.type === "error" ? " error" : ""}`}>
+                      {giftFeedback.message}
+                    </div>
+                  )}
                 </article>
               );
             })}
@@ -371,3 +377,5 @@ export default function WishlistList() {
     </>
   );
 }
+
+
