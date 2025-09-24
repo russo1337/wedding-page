@@ -296,4 +296,13 @@ fieldset legend {
     left: auto;
     right: -3rem;
   }
+
+  .tag {
+    font-size: 0.6em;
+  }
+
+  section {
+    padding: 1rem;
+  }
 }
+
