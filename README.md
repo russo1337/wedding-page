@@ -59,3 +59,31 @@ id	category	title	description	price	parts	payed	url	imageUrl
 - Connect `/api/register` and `/api/wishlist` to a real database or third-party service
 - Add authentication or invite codes if you want to restrict access
 - Customise styling, copy, and imagery to match your celebration
+
+## Mail configuration
+This project sends confirmation emails through SMTP. Add the credentials you use to `.env.local`:
+
+```dotenv
+SMTP_HOST=
+SMTP_PORT=
+SMTP_SECURE=true
+SMTP_USER=
+SMTP_PASSWORD=
+EMAIL_FROM=
+```
+
+Use your provider’s host, username, and password. `SMTP_SECURE=true` assumes an SSL/TLS connection on port 465; adjust these values if you rely on STARTTLS (usually `SMTP_SECURE=false` and port 587).
+
+## Access protection
+The site can be protected behind a shared password and feature flags, controlled by environment variables:
+
+```dotenv
+SITE_PASSWORD=choose-a-shared-password
+REGISTRATION_ENABLED=true
+```
+
+- `SITE_PASSWORD` activates the middleware-based login gate. When omitted, the site stays public, which is useful during local development.
+- `REGISTRATION_ENABLED` toggles the RSVP flow. Set it to `false`, `0`, `off`, or `no` to hide the registration link, disable the `/register` page, and block `/api/register` submissions.
+
+Restart the Next.js server after changing any environment variables so the new values take effect.
+
