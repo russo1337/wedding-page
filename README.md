@@ -55,11 +55,6 @@ id	category	title	description	price	parts	payed	url	imageUrl
 - `parts` describes how many contributions are available for the gift. `payed` tracks how many parts have already been reserved.
 - The wishlist API updates the `payed` column when someone reserves a gift. If you set `GOOGLE_SHEETS_WISHLIST_LOG_WORKSHEET_NAME`, each reservation is also appended to that sheet with timestamp, guest name, message, and the number of parts reserved.
 
-## Next steps
-- Connect `/api/register` and `/api/wishlist` to a real database or third-party service
-- Add authentication or invite codes if you want to restrict access
-- Customise styling, copy, and imagery to match your celebration
-
 ## Mail configuration
 This project sends confirmation emails through SMTP. Add the credentials you use to `.env.local`:
 
