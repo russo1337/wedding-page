@@ -10,8 +10,12 @@ export default function WishlistPage() {
       <span className="tag">Wunschliste</span>
       <h1>Wählt ein Geschenk aus</h1>
       <p>
-        Eure Anwesenheit ist unser größtes Geschenk, aber wenn ihr unsere Flitterwochen unterstützen möchtet,
-        könnt ihr unten eine Erfahrung für uns reservieren.
+        Euer grösstes Geschenk ist, dass ihr mit uns feiert 🎉. 
+        Wer uns darüber hinaus noch eine Freude machen möchte: 
+        nach dem Sommerfest starten wir zu einer 6-wöchigen Reise quer durch Italien. 
+        Dafür haben wir eine Wunschliste mit kleinen und grösseren Bausteinen erstellt – 
+        von Gelato in Palermo bis Campingnacht am Strand. 
+        So begleitet ihr uns ein Stück auf unserem Abenteuer!
       </p>
       <WishlistList />
     </section>

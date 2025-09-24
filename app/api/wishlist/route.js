@@ -288,14 +288,14 @@ export async function POST(request) {
 
   if (!contributorName || !isValidEmail(contributorEmail)) {
     return NextResponse.json(
-      { message: "Bitte gebt euren Namen und eine gueltige E-Mail-Adresse an." },
+      { message: "Bitte gebt euren Namen und eine guültige E-Mail-Adresse an." },
       { status: 400 }
     );
   }
 
   if (rawItems.length === 0) {
     return NextResponse.json(
-      { message: "Bitte waehlt mindestens ein Geschenk aus." },
+      { message: "Bitte wählt mindestens ein Geschenk aus." },
       { status: 400 }
     );
   }
@@ -310,7 +310,7 @@ export async function POST(request) {
     }
 
     if (requestedParts <= 0) {
-      return NextResponse.json({ message: "Es wurde kein gueltiger Anteil angegeben." }, { status: 400 });
+      return NextResponse.json({ message: "Es wurde kein gültiger Anteil angegeben." }, { status: 400 });
     }
 
     aggregated.set(giftId, (aggregated.get(giftId) || 0) + requestedParts);
@@ -318,7 +318,7 @@ export async function POST(request) {
 
   if (aggregated.size === 0) {
     return NextResponse.json(
-      { message: "Bitte waehlt mindestens ein Geschenk aus." },
+      { message: "Bitte wählt mindestens ein Geschenk aus." },
       { status: 400 }
     );
   }
@@ -333,12 +333,12 @@ export async function POST(request) {
       const target = gifts.find((gift) => gift.id === giftId);
 
       if (!target) {
-        return NextResponse.json({ message: "Ein ausgewaehltes Geschenk wurde nicht gefunden." }, { status: 404 });
+        return NextResponse.json({ message: "Ein ausgewähltes Geschenk wurde nicht gefunden." }, { status: 404 });
       }
 
       if (target.remainingParts <= 0) {
         return NextResponse.json(
-          { message: `"${target.title}" ist bereits vollstaendig reserviert.` },
+          { message: `"${target.title}" ist bereits vollständig reserviert.` },
           { status: 409 }
         );
       }
@@ -346,7 +346,7 @@ export async function POST(request) {
       if (requestedParts > target.remainingParts) {
         return NextResponse.json(
           {
-            message: `Fuer "${target.title}" sind nur noch ${target.remainingParts} Anteil(e) verfuegbar.`
+            message: `Für "${target.title}" sind nur noch ${target.remainingParts} Anteil(e) verfuegbar.`
           },
           { status: 409 }
         );
@@ -420,7 +420,7 @@ export async function POST(request) {
 
       await sendContributionEmail({
         to: contributorEmail,
-        subject: "Vielen Dank fuer euren Beitrag",
+        subject: "Vielen Dank für euren Beitrag",
         html
       });
     } catch (emailError) {
@@ -428,7 +428,7 @@ export async function POST(request) {
     }
 
     return NextResponse.json({
-      message: "Vielen Dank fuer eure Reservierung!",
+      message: "Vielen Dank für eure Reservierung!",
       gifts: updatedGifts
     });
   } catch (error) {

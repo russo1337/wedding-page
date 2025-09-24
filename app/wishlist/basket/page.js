@@ -173,7 +173,7 @@ export default function WishlistBasketPage() {
     const trimmedEmail = contributor.email.trim();
 
     if (!trimmedName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      setFeedback({ type: "error", message: "Bitte gebt Name und eine gueltige E-Mail-Adresse an." });
+      setFeedback({ type: "error", message: "Bitte gebt Name und eine gültige E-Mail-Adresse an." });
       return;
     }
 
