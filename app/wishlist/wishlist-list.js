@@ -1,114 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  formatContributionTotal,
+  formatPricePerPart,
+  loadBasket,
+  saveBasket
+} from "@/lib/wishlist-utils";
 
-const EMPTY_PLEDGE = { name: "", email: "", message: "", parts: 1 };
-const FALLBACK_CATEGORY = "Weitere Wünsche";
-
-function parseNumericPrice(price) {
-  if (!price) {
-    return null;
-  }
-
-  const digitsOnly = price.toString().replace(/[^0-9.,'\-]/g, "").replace(/'/g, "");
-  if (!digitsOnly) {
-    return null;
-  }
-
-  const commaIndex = digitsOnly.lastIndexOf(",");
-  const dotIndex = digitsOnly.lastIndexOf(".");
-  let normalized = digitsOnly;
-
-  if (commaIndex > -1 && dotIndex > -1) {
-    if (commaIndex > dotIndex) {
-      normalized = normalized.replace(/\./g, "").replace(/,/g, ".");
-    } else {
-      normalized = normalized.replace(/,/g, "");
-    }
-  } else if (commaIndex > -1) {
-    normalized = normalized.replace(/,/g, ".");
-  } else {
-    normalized = normalized.replace(/,/g, "");
-  }
-
-  const value = Number(normalized);
-  return Number.isFinite(value) ? value : null;
-}
-
-function extractCurrencyParts(price) {
-  const trimmed = price?.trim?.() ?? "";
-  if (!trimmed) {
-    return { prefix: "", suffix: "" };
-  }
-
-  const prefixMatch = trimmed.match(/^[^\d-]+/);
-  const suffixMatch = trimmed.match(/[^\d.,\s]+$/);
-
-  const prefix = prefixMatch ? prefixMatch[0].trim() : "";
-  const suffix = suffixMatch && (!prefix || suffixMatch[0].trim() !== prefix) ? suffixMatch[0].trim() : "";
-
-  return { prefix, suffix };
-}
-
-function formatPricePerPart(price, parts) {
-  if (!price || parts <= 1) {
-    return "";
-  }
-
-  const total = parseNumericPrice(price);
-  if (!Number.isFinite(total) || total <= 0) {
-    return "";
-  }
-
-  const perPart = total / parts;
-  const rounded = Math.round(perPart * 100) / 100;
-  const formattedValue = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
-  const { prefix, suffix } = extractCurrencyParts(price);
-
-  const valueWithCurrency = prefix
-    ? `${prefix} ${formattedValue}`.trim()
-    : suffix
-      ? `${formattedValue} ${suffix}`.trim()
-      : formattedValue;
-
-  return `${valueWithCurrency} pro Anteil`;
-}
-
-function formatContributionTotal(price, totalParts, selectedParts) {
-  if (!price) {
-    return "";
-  }
-
-  const total = parseNumericPrice(price);
-  if (!Number.isFinite(total) || total <= 0) {
-    return "";
-  }
-
-  const parts = Math.max(1, selectedParts || 1);
-  const base = totalParts && totalParts > 0 ? total / totalParts : total;
-  const amount = Math.round(base * parts * 100) / 100;
-  const formattedValue = Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
-  const { prefix, suffix } = extractCurrencyParts(price);
-
-  if (prefix) {
-    return `${prefix} ${formattedValue}`.trim();
-  }
-  if (suffix) {
-    return `${formattedValue} ${suffix}`.trim();
-  }
-  return formattedValue;
-}
-
-function isValidEmail(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
+const FALLBACK_CATEGORY = "Weitere Wuensche";
 
 export default function WishlistList() {
   const [gifts, setGifts] = useState([]);
-  const [pledges, setPledges] = useState({});
-  const [feedback, setFeedback] = useState(null); // { type, message, giftId }
+  const [draftSelections, setDraftSelections] = useState({});
+  const [basket, setBasket] = useState([]);
+  const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeGift, setActiveGift] = useState(null);
+  const hasLoadedOnceRef = useRef(false);
 
   const fetchGifts = async () => {
     setLoading(true);
@@ -117,39 +26,64 @@ export default function WishlistList() {
       if (!response.ok) {
         throw new Error("Die Wunschliste kann gerade nicht geladen werden.");
       }
+
       const data = await response.json();
-      setGifts(data?.gifts ?? []);
-      setFeedback(null);
+      const nextGifts = data?.gifts ?? [];
+      let itemsRemoved = false;
+
+      setGifts(nextGifts);
+      setBasket((current) => {
+        const adjusted = [];
+        current.forEach((item) => {
+          const gift = nextGifts.find((entry) => entry.id === item.giftId);
+          if (!gift || gift.remainingParts <= 0) {
+            itemsRemoved = true;
+            return;
+          }
+
+          const maxParts = Math.max(1, gift.remainingParts);
+          adjusted.push({
+            giftId: item.giftId,
+            parts: Math.min(Math.max(1, item.parts), maxParts)
+          });
+        });
+
+        if (hasLoadedOnceRef.current && (adjusted.length !== current.length || itemsRemoved)) {
+          saveBasket(adjusted);
+        }
+
+        return adjusted;
+      });
+
+      setFeedback((current) => {
+        if (itemsRemoved) {
+          return {
+            type: "error",
+            message: "Einige Geschenke sind nicht mehr verfuegbar und wurden aus dem Korb entfernt."
+          };
+        }
+        return current && current.type === "success" ? current : null;
+      });
     } catch (error) {
-      setFeedback({ type: "error", message: error.message, giftId: null });
+      setFeedback({ type: "error", message: error.message });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    const stored = loadBasket();
+    setBasket(stored);
     fetchGifts();
   }, []);
 
-  const updatePledge = (giftId, field, value) => {
-    setPledges((current) => {
-      const existing = current[giftId] ? { ...current[giftId] } : { ...EMPTY_PLEDGE };
-      let nextValue = value;
-
-      if (field === "parts") {
-        const parsed = Number(value);
-        nextValue = Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
-      }
-
-      return {
-        ...current,
-        [giftId]: {
-          ...existing,
-          [field]: nextValue
-        }
-      };
-    });
-  };
+  useEffect(() => {
+    if (!hasLoadedOnceRef.current) {
+      hasLoadedOnceRef.current = true;
+      return;
+    }
+    saveBasket(basket);
+  }, [basket]);
 
   const groupedGifts = useMemo(() => {
     const groups = new Map();
@@ -170,57 +104,51 @@ export default function WishlistList() {
       .sort((a, b) => a.category.localeCompare(b.category, "de"));
   }, [gifts]);
 
-  const reserveGift = async (giftId) => {
-    setFeedback(null);
-    setActiveGift(giftId);
+  const basketCount = basket.reduce((total, item) => total + (item.parts || 0), 0);
 
-    try {
-      const gift = gifts.find((entry) => entry.id === giftId);
-      if (!gift) {
-        throw new Error("Geschenk wurde nicht gefunden.");
-      }
+  const handleDraftChange = (giftId, rawValue) => {
+    const gift = gifts.find((entry) => entry.id === giftId);
+    const maxParts = gift ? Math.max(1, gift.remainingParts) : 1;
+    const parsed = Number(rawValue);
+    const nextParts = Number.isFinite(parsed) && parsed > 0 ? Math.min(Math.floor(parsed), maxParts) : 1;
 
-      const pledge = pledges[gift.id] ? { ...pledges[gift.id] } : { ...EMPTY_PLEDGE };
-      const trimmedName = (pledge.name ?? "").trim();
-      const trimmedEmail = (pledge.email ?? "").trim();
+    setDraftSelections((current) => ({
+      ...current,
+      [giftId]: { parts: nextParts }
+    }));
+  };
 
-      if (!trimmedName || !trimmedEmail || !isValidEmail(trimmedEmail)) {
-        setFeedback({ type: "error", message: "Bitte gebt Name und eine gültige E-Mail-Adresse an.", giftId: gift.id });
-        setActiveGift(null);
-        return;
-      }
-
-      const requestedParts = Math.max(1, Math.min(gift.remainingParts || 1, Number(pledge.parts) || 1));
-
-      const response = await fetch("/api/wishlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          giftId,
-          name: trimmedName,
-          email: trimmedEmail,
-          message: pledge.message,
-          parts: requestedParts
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data?.message || "Wir konnten dieses Geschenk nicht reservieren.");
-      }
-
-      setPledges((current) => ({
-        ...current,
-        [gift.id]: { ...EMPTY_PLEDGE }
-      }));
-      await fetchGifts();
-      setFeedback({ type: "success", message: data?.message || "Geschenk reserviert.", giftId: gift.id });
-    } catch (error) {
-      setFeedback({ type: "error", message: error.message, giftId: giftId });
-    } finally {
-      setActiveGift(null);
+  const addToBasket = (giftId) => {
+    const gift = gifts.find((entry) => entry.id === giftId);
+    if (!gift) {
+      setFeedback({ type: "error", message: "Geschenk wurde nicht gefunden." });
+      return;
     }
+
+    if (gift.remainingParts <= 0) {
+      setFeedback({ type: "error", message: "Dieses Geschenk ist bereits vollstaendig reserviert." });
+      return;
+    }
+
+    const draft = draftSelections[giftId];
+    const parts = Math.max(1, Math.min(gift.remainingParts, draft?.parts || 1));
+
+    setBasket((current) => {
+      const existingIndex = current.findIndex((item) => item.giftId === giftId);
+      if (existingIndex >= 0) {
+        const next = current.slice();
+        next[existingIndex] = { giftId, parts };
+        return next;
+      }
+      return [...current, { giftId, parts }];
+    });
+
+    setDraftSelections((current) => ({
+      ...current,
+      [giftId]: { parts }
+    }));
+
+    setFeedback({ type: "success", message: `${gift.title} wurde dem Korb hinzugefuegt.` });
   };
 
   if (loading && gifts.length === 0) {
@@ -233,7 +161,13 @@ export default function WishlistList() {
 
   return (
     <>
-      {feedback && feedback.giftId == null && (
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
+        <Link href="/wishlist/basket" className="primary-button">
+          {basketCount > 0 ? `Zum Korb (${basketCount})` : "Zum Korb"}
+        </Link>
+      </div>
+
+      {feedback && (
         <div className={`feedback${feedback.type === "error" ? " error" : ""}`}>
           {feedback.message}
         </div>
@@ -245,18 +179,17 @@ export default function WishlistList() {
           <div className="card-grid">
             {items.map((gift) => {
               const isReserved = gift.remainingParts === 0;
-              const pledge = pledges[gift.id] ? { ...pledges[gift.id] } : { ...EMPTY_PLEDGE };
+              const draft = draftSelections[gift.id] || { parts: 1 };
+              const partsDraft = Math.max(1, Math.min(gift.remainingParts || 1, draft.parts || 1));
               const priceLabel = gift.price ? gift.price : "";
               const pricePerPartLabel = gift.totalParts > 1 ? formatPricePerPart(gift.price, gift.totalParts) : "";
-              const selectedParts = Math.max(1, Math.min(gift.remainingParts || 1, Number(pledge.parts) || 1));
-              const contributionTotal = formatContributionTotal(gift.price, gift.totalParts, selectedParts);
+              const contributionTotal = formatContributionTotal(gift.price, gift.totalParts, partsDraft);
               const partsLabel = gift.totalParts > 1
-                ? `${gift.remainingParts} von ${gift.totalParts} Anteil(en) verfügbar`
+                ? `${gift.remainingParts} von ${gift.totalParts} Anteil(en) verfuegbar`
                 : isReserved
                   ? "Bereits reserviert"
-                  : "Noch verfügbar";
-
-              const giftFeedback = feedback && feedback.giftId === gift.id ? feedback : null;
+                  : "Noch verfuegbar";
+              const inBasket = basket.find((item) => item.giftId === gift.id);
 
               return (
                 <article key={gift.id} className="card" style={{ display: "grid", gap: "0.8rem" }}>
@@ -306,67 +239,35 @@ export default function WishlistList() {
 
                   {isReserved ? (
                     <p style={{ fontStyle: "italic", color: "rgba(18, 58, 50, 0.6)" }}>
-                      Dieses Geschenk wurde bereits vollständig reserviert.
+                      Dieses Geschenk wurde bereits vollstaendig reserviert.
                     </p>
                   ) : (
                     <>
-                      <label>
-                        Euer Name (erforderlich)
-                        <input
-                          type="text"
-                          value={pledge.name}
-                          onChange={(event) => updatePledge(gift.id, "name", event.target.value)}
-                          placeholder="Vor- und Nachname"
-                          required
-                        />
-                      </label>
-                      <label>
-                        E-Mail-Adresse (erforderlich)
-                        <input
-                          type="email"
-                          value={pledge.email}
-                          onChange={(event) => updatePledge(gift.id, "email", event.target.value)}
-                          placeholder="ihr@example.com"
-                          required
-                        />
-                      </label>
-                      <label>
-                        Nachricht (optional)
-                        <textarea
-                          rows={3}
-                          value={pledge.message}
-                          onChange={(event) => updatePledge(gift.id, "message", event.target.value)}
-                          placeholder="Hinterlasst uns eine Nachricht"
-                        />
-                      </label>
                       <label>
                         Anzahl Anteile
                         <input
                           type="number"
                           min={1}
                           max={gift.remainingParts}
-                          value={pledge.parts}
-                          onChange={(event) => updatePledge(gift.id, "parts", event.target.value)}
+                          value={partsDraft}
+                          onChange={(event) => handleDraftChange(gift.id, event.target.value)}
                         />
                       </label>
                       <button
                         type="button"
-                        onClick={() => reserveGift(gift.id)}
-                        disabled={activeGift === gift.id}
+                        onClick={() => addToBasket(gift.id)}
+                        className="primary-button"
                       >
-                        {activeGift === gift.id
-                          ? "Reservierung läuft..."
-                          : contributionTotal
-                            ? `Geschenk reservieren - ${contributionTotal}`
-                            : "Geschenk reservieren"}
+                        {contributionTotal
+                          ? `Zum Korb hinzufuegen - ${contributionTotal}`
+                          : "Zum Korb hinzufuegen"}
                       </button>
+                      {inBasket ? (
+                        <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.7)" }}>
+                          Bereits im Korb: {inBasket.parts} Anteil(e)
+                        </span>
+                      ) : null}
                     </>
-                  )}
-
-                  {giftFeedback && (
-                    <div className={`feedback${giftFeedback.type === "error" ? " error" : ""}`}>
-                      {giftFeedback.message}
-                    </div>
                   )}
                 </article>
               );
@@ -377,5 +278,4 @@ export default function WishlistList() {
     </>
   );
 }
-
 

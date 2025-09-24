@@ -69,6 +69,86 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value ?? "");
 }
 
+function parsePriceToNumber(price) {
+  if (!price) {
+    return null;
+  }
+
+  const digitsOnly = price.toString().replace(/[^0-9.,'\-]/g, "").replace(/'/g, "");
+  if (!digitsOnly) {
+    return null;
+  }
+
+  const commaIndex = digitsOnly.lastIndexOf(",");
+  const dotIndex = digitsOnly.lastIndexOf(".");
+  let normalized = digitsOnly;
+
+  if (commaIndex > -1 && dotIndex > -1) {
+    if (commaIndex > dotIndex) {
+      normalized = normalized.replace(/\./g, "").replace(/,/g, ".");
+    } else {
+      normalized = normalized.replace(/,/g, "");
+    }
+  } else if (commaIndex > -1) {
+    normalized = normalized.replace(/,/g, ".");
+  } else {
+    normalized = normalized.replace(/,/g, "");
+  }
+
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
+}
+
+function extractCurrencyParts(price) {
+  const trimmed = price?.trim?.() ?? "";
+  if (!trimmed) {
+    return { prefix: "", suffix: "" };
+  }
+
+  const prefixMatch = trimmed.match(/^[^\d-]+/);
+  const suffixMatch = trimmed.match(/[^\d.,\s]+$/);
+
+  const prefix = prefixMatch ? prefixMatch[0].trim() : "";
+  const suffix = suffixMatch && (!prefix || suffixMatch[0].trim() !== prefix) ? suffixMatch[0].trim() : "";
+
+  return { prefix, suffix };
+}
+
+function calculateContributionDetails(price, totalParts, selectedParts) {
+  const total = parsePriceToNumber(price);
+  if (!Number.isFinite(total) || total <= 0) {
+    return { label: "", numeric: 0, prefix: "", suffix: "" };
+  }
+
+  const parts = Math.max(1, selectedParts || 1);
+  const base = totalParts && totalParts > 0 ? total / totalParts : total;
+  const numeric = Math.round(base * parts * 100) / 100;
+  const formattedValue = Number.isInteger(numeric) ? String(numeric) : numeric.toFixed(2);
+  const { prefix, suffix } = extractCurrencyParts(price);
+  const label = prefix
+    ? `${prefix} ${formattedValue}`.trim()
+    : suffix
+      ? `${formattedValue} ${suffix}`.trim()
+      : formattedValue;
+
+  return { label, numeric, prefix, suffix };
+}
+
+function formatTotalLabel(amount, prefix, suffix) {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return "";
+  }
+
+  const formattedValue = Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+  if (prefix) {
+    return `${prefix} ${formattedValue}`.trim();
+  }
+  if (suffix) {
+    return `${formattedValue} ${suffix}`.trim();
+  }
+  return formattedValue;
+}
+
 async function loadWishlistSheet() {
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
   if (!spreadsheetId) {
@@ -138,7 +218,7 @@ async function loadWishlistSheet() {
         remainingParts,
         url: url?.toString() ?? "",
         imageUrl: imageUrl?.toString() ?? "",
-        rowNumber: rowOffset + 2 // account for header row
+        rowNumber: rowOffset + 2
       };
     })
     .filter(Boolean);
@@ -201,99 +281,146 @@ export async function GET() {
 
 export async function POST(request) {
   const payload = await request.json();
-  const { giftId, name, email, message, parts } = payload;
+  const contributorName = typeof payload?.name === "string" ? payload.name.trim() : "";
+  const contributorEmail = typeof payload?.email === "string" ? payload.email.trim().toLowerCase() : "";
+  const contributorMessage = typeof payload?.message === "string" ? payload.message.trim() : "";
+  const rawItems = Array.isArray(payload?.items) ? payload.items : [];
 
-  if (!giftId) {
-    return NextResponse.json({ message: "Geschenk-ID fehlt." }, { status: 400 });
+  if (!contributorName || !isValidEmail(contributorEmail)) {
+    return NextResponse.json(
+      { message: "Bitte gebt euren Namen und eine gueltige E-Mail-Adresse an." },
+      { status: 400 }
+    );
   }
 
-  const trimmedName = typeof name === "string" ? name.trim() : "";
-  const trimmedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-  const trimmedMessage = typeof message === "string" ? message.trim() : "";
-  const requestedParts = Math.max(1, Math.round(toNumber(parts) || 1));
-
-  if (!trimmedName || !isValidEmail(trimmedEmail)) {
+  if (rawItems.length === 0) {
     return NextResponse.json(
-      { message: "Bitte gebt euren Namen und eine gültige E-Mail-Adresse an." },
+      { message: "Bitte waehlt mindestens ein Geschenk aus." },
+      { status: 400 }
+    );
+  }
+
+  const aggregated = new Map();
+  for (const item of rawItems) {
+    const giftId = typeof item?.giftId === "string" ? item.giftId.trim() : "";
+    const requestedParts = Math.max(1, Math.round(toNumber(item?.parts) || 0));
+
+    if (!giftId) {
+      return NextResponse.json({ message: "Geschenk-ID fehlt." }, { status: 400 });
+    }
+
+    if (requestedParts <= 0) {
+      return NextResponse.json({ message: "Es wurde kein gueltiger Anteil angegeben." }, { status: 400 });
+    }
+
+    aggregated.set(giftId, (aggregated.get(giftId) || 0) + requestedParts);
+  }
+
+  if (aggregated.size === 0) {
+    return NextResponse.json(
+      { message: "Bitte waehlt mindestens ein Geschenk aus." },
       { status: 400 }
     );
   }
 
   try {
     const { spreadsheetId, worksheetName, gifts, columnIndices } = await loadWishlistSheet();
-    const target = gifts.find((gift) => gift.id === giftId);
-
-    if (!target) {
-      return NextResponse.json({ message: "Geschenk wurde nicht gefunden." }, { status: 404 });
-    }
-
-    if (target.remainingParts <= 0) {
-      return NextResponse.json(
-        { message: "Dieses Geschenk wurde bereits komplett reserviert." },
-        { status: 409 }
-      );
-    }
-
-    if (requestedParts > target.remainingParts) {
-      return NextResponse.json(
-        {
-          message: `Es sind nur noch ${target.remainingParts} Anteil(e) verfügbar.`
-        },
-        { status: 409 }
-      );
-    }
-
     const sheets = await getSheetsClient();
-    const newContributedParts = target.contributedParts + requestedParts;
 
-    if (columnIndices.payed >= 0) {
-      const payedColumnLetter = columnLetterFromIndex(columnIndices.payed);
-      const targetCell = `${worksheetName}!${payedColumnLetter}${target.rowNumber}`;
+    const validations = [];
 
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: targetCell,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[newContributedParts]]
-        }
-      });
+    for (const [giftId, requestedParts] of aggregated.entries()) {
+      const target = gifts.find((gift) => gift.id === giftId);
+
+      if (!target) {
+        return NextResponse.json({ message: "Ein ausgewaehltes Geschenk wurde nicht gefunden." }, { status: 404 });
+      }
+
+      if (target.remainingParts <= 0) {
+        return NextResponse.json(
+          { message: `"${target.title}" ist bereits vollstaendig reserviert.` },
+          { status: 409 }
+        );
+      }
+
+      if (requestedParts > target.remainingParts) {
+        return NextResponse.json(
+          {
+            message: `Fuer "${target.title}" sind nur noch ${target.remainingParts} Anteil(e) verfuegbar.`
+          },
+          { status: 409 }
+        );
+      }
+
+      validations.push({ target, requestedParts });
     }
 
-    await appendWishlistLog({
-      timestamp: new Date().toISOString(),
-      giftId: target.id,
-      giftTitle: target.title,
-      parts: requestedParts,
-      name: trimmedName,
-      email: trimmedEmail,
-      message: trimmedMessage
-    });
+    const updatedGifts = [];
+    const emailItems = [];
+    let totalNumeric = 0;
+    let totalPrefix = null;
+    let totalSuffix = null;
 
-    const remainingParts = Math.max(0, target.totalParts - newContributedParts);
+    for (const { target, requestedParts } of validations) {
+      const newContributedParts = target.contributedParts + requestedParts;
+      const remainingParts = Math.max(0, target.totalParts - newContributedParts);
 
-    const contributionAmount = (() => {
-      if (!target.price) return "";
-      const numeric = parseFloat(target.price.replace(/[^0-9.,-]/g, "").replace(/,(?=\d{3}(\D|$))/g, "").replace(",", "."));
-      if (!Number.isFinite(numeric)) return "";
-      const share = target.totalParts > 0 ? numeric / target.totalParts : numeric;
-      return `${Math.round(share * requestedParts * 100) / 100} ${target.price.replace(/[^A-Za-z]+/g, "")}`;
-    })();
+      if (columnIndices.payed >= 0) {
+        const payedColumnLetter = columnLetterFromIndex(columnIndices.payed);
+        const targetCell = `${worksheetName}!${payedColumnLetter}${target.rowNumber}`;
+
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: targetCell,
+          valueInputOption: "RAW",
+          requestBody: {
+            values: [[newContributedParts]]
+          }
+        });
+      }
+
+      await appendWishlistLog({
+        timestamp: new Date().toISOString(),
+        giftId: target.id,
+        giftTitle: target.title,
+        parts: requestedParts,
+        name: contributorName,
+        email: contributorEmail,
+        message: contributorMessage
+      });
+
+      updatedGifts.push({
+        id: target.id,
+        contributedParts: newContributedParts,
+        remainingParts
+      });
+
+      const amountDetails = calculateContributionDetails(target.price, target.totalParts, requestedParts);
+      emailItems.push({
+        title: target.title,
+        parts: requestedParts,
+        amountLabel: amountDetails.label
+      });
+
+      totalNumeric += amountDetails.numeric;
+      totalPrefix = totalPrefix === null ? amountDetails.prefix : totalPrefix === amountDetails.prefix ? totalPrefix : "";
+      totalSuffix = totalSuffix === null ? amountDetails.suffix : totalSuffix === amountDetails.suffix ? totalSuffix : "";
+    }
+
+    const totalAmountLabel = formatTotalLabel(totalNumeric, totalPrefix, totalSuffix);
 
     try {
       const html = renderContributionEmail({
-        recipientName: trimmedName,
-        recipientEmail: trimmedEmail,
-        giftTitle: target.title,
-        parts: requestedParts,
-        contributionAmount,
-        eventDate: target?.eventDate,
-        message: trimmedMessage
+        recipientName: contributorName,
+        recipientEmail: contributorEmail,
+        items: emailItems,
+        totalAmountLabel,
+        message: contributorMessage
       });
 
       await sendContributionEmail({
-        to: trimmedEmail,
-        subject: "Vielen Dank für euren Beitrag",
+        to: contributorEmail,
+        subject: "Vielen Dank fuer euren Beitrag",
         html
       });
     } catch (emailError) {
@@ -301,17 +428,13 @@ export async function POST(request) {
     }
 
     return NextResponse.json({
-      message: "Vielen Dank für eure Reservierung!",
-      gift: {
-        ...target,
-        contributedParts: newContributedParts,
-        remainingParts
-      }
+      message: "Vielen Dank fuer eure Reservierung!",
+      gifts: updatedGifts
     });
   } catch (error) {
-    console.error("Failed to reserve wishlist item", error);
+    console.error("Failed to reserve wishlist items", error);
     return NextResponse.json(
-      { message: "Wir konnten dieses Geschenk nicht reservieren." },
+      { message: "Wir konnten eure Reservierung nicht speichern." },
       { status: 500 }
     );
   }

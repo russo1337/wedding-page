@@ -1,10 +1,8 @@
 export function renderContributionEmail({
   recipientName,
   recipientEmail,
-  giftTitle,
-  parts,
-  contributionAmount,
-  eventDate,
+  items = [],
+  totalAmountLabel,
   bankIban = "CH00 1234 5678 9012 3456 7",
   bankReference = "Sandra & Riccardo",
   bankAccountHolder = "Sandra & Riccardo Russo",
@@ -12,11 +10,36 @@ export function renderContributionEmail({
   additionalInfo
 }) {
   const safe = (value) => (value ?? "").toString();
+  const itemsHtml = items.length
+    ? `<div class="card">
+        <h2>Ausgewaehlte Geschenke</h2>
+        ${items
+          .map(
+            (item) => `<p>
+              <strong>${safe(item.title)}</strong><br/>
+              Anteile: ${safe(item.parts)}${item.amountLabel ? `<br/>Betrag: ${safe(item.amountLabel)}` : ""}
+            </p>`
+          )
+          .join("")}
+      </div>`
+    : "";
+
+  const totalHtml = totalAmountLabel
+    ? `<div class="card" style="background: rgba(31, 187, 164, 0.08); border-color: rgba(31, 187, 164, 0.25);">
+        <h2>Gesamtsumme</h2>
+        <p style="font-weight: 600; font-size: 1.05rem;">${safe(totalAmountLabel)}</p>
+      </div>`
+    : "";
+
+  const messageHtml = message
+    ? `<p><strong>Nachricht von euch:</strong><br/>${safe(message)}</p>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8" />
-<title>Vielen Dank für euren Beitrag</title>
+<title>Vielen Dank fuer euren Beitrag</title>
 <style>
   body {
     margin: 0;
@@ -100,37 +123,32 @@ export function renderContributionEmail({
 <body>
   <div class="container">
     <div class="header">
-      <h1>Danke euch, ${safe(recipientName) || "liebe Gäste"}!</h1>
-      <p>Wir freuen uns riesig über euren Beitrag zu unserem Fest.</p>
+      <h1>Danke euch, ${safe(recipientName) || "liebe Gaeste"}!</h1>
+      <p>Wir freuen uns riesig ueber euren Beitrag zu unserem Fest.</p>
     </div>
     <div class="content">
-      <p>Ihr habt euch für das Geschenk <strong>${safe(giftTitle)}</strong> entschieden${parts ? ` und ${parts} Anteil(e)` : ""}. Das bedeutet uns unglaublich viel – vielen Dank für eure Unterstützung!</p>
-      ${eventDate ? `<p>Wir freuen uns darauf, euch am <strong>${safe(eventDate)}</strong> zu sehen.</p>` : ""}
-
+      <p>Ihr habt fuer uns eine Auswahl an Geschenken reserviert. Das bedeutet uns unglaublich viel - vielen Dank fuer eure Unterstuetzung!</p>
       <div class="card">
         <h2>Eure Angaben</h2>
-        <p><strong>Name:</strong> ${safe(recipientName) || "–"}</p>
-        <p><strong>E-Mail:</strong> ${safe(recipientEmail) || "–"}</p>
-        ${contributionAmount ? `<p><strong>Gesamter Beitrag:</strong> ${safe(contributionAmount)}</p>` : ""}
-        ${message ? `<p><strong>Nachricht:</strong><br/>${safe(message)}</p>` : ""}
+        <p><strong>Name:</strong> ${safe(recipientName) || "-"}</p>
+        <p><strong>E-Mail:</strong> ${safe(recipientEmail) || "-"}</p>
+        ${messageHtml}
       </div>
-
+      ${itemsHtml}
+      ${totalHtml}
       <h2>Zahlungsinformationen</h2>
       <dl class="banking">
-        <dt>Kontoinhaberin / Kontoinhaber</dt>
+        <dt>Kontoinhaber:in</dt>
         <dd>${safe(bankAccountHolder)}</dd>
         <dt>IBAN</dt>
         <dd>${safe(bankIban)}</dd>
         <dt>Zahlungsreferenz</dt>
         <dd>${safe(bankReference)}</dd>
       </dl>
-
       ${additionalInfo ? `<div class="card">${safe(additionalInfo)}</div>` : ""}
-
       <div class="cta">
-        <p>Falls ihr Fragen habt oder etwas ändern möchtet,
-        schreibt uns jederzeit. Wir freuen uns schon sehr darauf,
-        mit euch anzustoßen!</p>
+        <p>Falls ihr Fragen habt oder etwas aendern moechtet, meldet euch jederzeit.
+        Wir freuen uns schon sehr darauf, mit euch anzustossen!</p>
         <p><strong>Herzlich,<br/>Sandra & Riccardo</strong></p>
       </div>
     </div>
