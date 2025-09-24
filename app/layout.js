@@ -1,6 +1,7 @@
 import "./globals.css";
 import Link from "next/link";
 import { Inter } from "next/font/google";
+import { isRegistrationEnabled } from "@/lib/features";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -10,6 +11,8 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const registrationEnabled = isRegistrationEnabled();
+
   return (
     <html lang="de">
       <body className={inter.className}>
@@ -19,7 +22,9 @@ export default function RootLayout({ children }) {
               <strong>Sandra & Riccardo</strong>
             </Link>
             <ul>
-              <li><Link href="/register">Anmeldung</Link></li>
+              {registrationEnabled && (
+                <li><Link href="/register">Anmeldung</Link></li>
+              )}
               <li><Link href="/wishlist">Wunschliste</Link></li>
             </ul>
           </nav>

@@ -1,8 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { weddingEvents } from "@/lib/data";
+import { isRegistrationEnabled } from "@/lib/features";
 
 export default function HomePage() {
+  const registrationEnabled = isRegistrationEnabled();
+
   return (
     <>
       <section className="hero">
@@ -51,7 +54,7 @@ export default function HomePage() {
           <span className="tag">27. & 28. Juni 2026</span>
           <h1>Russo's Sommerfest</h1>
           <p>
-            Kommt zu einem oder gleich zu mehreren Festblöcken – ganz wie ihr mögt:
+            Kommt zu einem oder gleich zu mehreren Festblöcken - ganz wie ihr mögt:
           </p>
           <ul>
             <li>Samstag, Mittag bis Abend</li>
@@ -59,11 +62,15 @@ export default function HomePage() {
             <li>Sonntagmorgen-Brunch</li>
           </ul>
           <p>
-            Wir freuen uns riesig, mit euch zu feiern! Ganz ohne Trauung, weisses Kleid oder klassischen Hochzeitsrahmen – einfach ein Fest mit euch.
-            Alle weiteren Infos folgen – haltet euch das Datum frei...
+            Wir freuen uns riesig, mit euch zu feiern! Ganz ohne Trauung, weisses Kleid oder klassischen Hochzeitsrahmen - einfach ein Fest mit euch.
+            Alle weiteren Infos folgen - haltet euch das Datum frei...
           </p>
           <div className="cta-group">
-            <Link href="/register" className="primary-button">Jetzt anmelden</Link>
+            {registrationEnabled ? (
+              <Link href="/register" className="primary-button">Jetzt anmelden</Link>
+            ) : (
+              <span style={{ fontWeight: 600, color: "#0f594a" }}>Die Anmeldung öffnet bald.</span>
+            )}
             <Link href="/wishlist" className="secondary-button">Wunschliste ansehen</Link>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { eventOptions } from "@/lib/data";
 import { getSheetsClient } from "@/lib/googleSheets";
+import { isRegistrationEnabled } from "@/lib/features";
 
 const registrations = [];
 
@@ -38,6 +39,13 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  if (!isRegistrationEnabled()) {
+    return NextResponse.json(
+      { message: "Die Anmeldung ist aktuell geschlossen." },
+      { status: 503 }
+    );
+  }
+
   const payload = await request.json();
   const { fullName, email, adults, children, attending, message } = payload;
 
