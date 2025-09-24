@@ -12,7 +12,7 @@ export function renderContributionEmail({
   const safe = (value) => (value ?? "").toString();
   const itemsHtml = items.length
     ? `<div class="card">
-        <h2>Ausgewaehlte Geschenke</h2>
+        <h2>Ausgewählte Geschenke</h2>
         ${items
           .map(
             (item) => `<p>
@@ -39,7 +39,7 @@ export function renderContributionEmail({
 <html lang="de">
 <head>
 <meta charset="utf-8" />
-<title>Vielen Dank fuer euren Beitrag</title>
+<title>Vielen Dank für euren Beitrag</title>
 <style>
   body {
     margin: 0;
@@ -123,11 +123,11 @@ export function renderContributionEmail({
 <body>
   <div class="container">
     <div class="header">
-      <h1>Danke euch, ${safe(recipientName) || "liebe Gaeste"}!</h1>
-      <p>Wir freuen uns riesig ueber euren Beitrag zu unserem Fest.</p>
+      <h1>Danke euch, ${safe(recipientName) || "liebe Gäste"}!</h1>
+      <p>Wir freuen uns riesig über euren Beitrag zu unserem Fest.</p>
     </div>
     <div class="content">
-      <p>Ihr habt fuer uns eine Auswahl an Geschenken reserviert. Das bedeutet uns unglaublich viel - vielen Dank fuer eure Unterstuetzung!</p>
+      <p>Ihr habt für uns eine Auswahl an Geschenken reserviert. Das bedeutet uns unglaublich viel - vielen Dank für eure Unterstützung!</p>
       <div class="card">
         <h2>Eure Angaben</h2>
         <p><strong>Name:</strong> ${safe(recipientName) || "-"}</p>
@@ -147,7 +147,7 @@ export function renderContributionEmail({
       </dl>
       ${additionalInfo ? `<div class="card">${safe(additionalInfo)}</div>` : ""}
       <div class="cta">
-        <p>Falls ihr Fragen habt oder etwas aendern moechtet, meldet euch jederzeit.
+        <p>Falls ihr Fragen habt oder etwas ändern möchtet, meldet euch jederzeit.
         Wir freuen uns schon sehr darauf, mit euch anzustossen!</p>
         <p><strong>Herzlich,<br/>Sandra & Riccardo</strong></p>
       </div>
