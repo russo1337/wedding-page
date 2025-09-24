@@ -3,8 +3,8 @@ export function renderContributionEmail({
   recipientEmail,
   items = [],
   totalAmountLabel,
-  bankIban = "CH00 1234 5678 9012 3456 7",
-  bankReference = "Sandra & Riccardo",
+  bankIban = "CH42 0023 9239 1023 3340 E",
+  bankReference = "Russo Geschenk",
   bankAccountHolder = "Sandra & Riccardo Russo",
   message,
   additionalInfo
