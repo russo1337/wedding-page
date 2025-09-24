@@ -265,7 +265,7 @@ export default function WishlistBasketPage() {
                   </label>
                   <div style={{ display: "grid", gap: "0.25rem" }}>
                     <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.75)" }}>
-                      verfügbar: {item.remainingParts} Anteil(e)
+                      Verfügbar: {item.remainingParts} Anteil(e)
                     </span>
                     {item.price ? <span style={{ fontWeight: 600 }}>{item.price}</span> : null}
                     {item.pricePerPart ? (
@@ -331,4 +331,5 @@ export default function WishlistBasketPage() {
     </section>
   );
 }
+
 

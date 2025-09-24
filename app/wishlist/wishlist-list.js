@@ -10,6 +10,7 @@ import {
 } from "@/lib/wishlist-utils";
 
 const FALLBACK_CATEGORY = "Weitere Wünsche";
+const ALL_CATEGORY = "Alle Kategorien";
 
 export default function WishlistList() {
   const [gifts, setGifts] = useState([]);
@@ -17,6 +18,7 @@ export default function WishlistList() {
   const [basket, setBasket] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY);
   const hasLoadedOnceRef = useRef(false);
 
   const fetchGifts = async () => {
@@ -104,6 +106,28 @@ export default function WishlistList() {
       .sort((a, b) => a.category.localeCompare(b.category, "de"));
   }, [gifts]);
 
+  const categories = useMemo(() => {
+    const uniqueNames = Array.from(new Set(groupedGifts.map((group) => group.category)));
+    return [ALL_CATEGORY, ...uniqueNames];
+  }, [groupedGifts]);
+
+  useEffect(() => {
+    if (selectedCategory === ALL_CATEGORY) {
+      return;
+    }
+    const availableCategories = categories.slice(1);
+    if (!availableCategories.includes(selectedCategory)) {
+      setSelectedCategory(ALL_CATEGORY);
+    }
+  }, [categories, selectedCategory]);
+
+  const visibleGroups = useMemo(() => {
+    if (selectedCategory === ALL_CATEGORY) {
+      return groupedGifts;
+    }
+    return groupedGifts.filter((group) => group.category === selectedCategory);
+  }, [groupedGifts, selectedCategory]);
+
   const basketCount = basket.reduce((total, item) => total + (item.parts || 0), 0);
 
   const handleDraftChange = (giftId, rawValue) => {
@@ -167,114 +191,145 @@ export default function WishlistList() {
         </Link>
       </div>
 
+      {categories.length > 1 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.5rem" }}>
+          {categories.map((category) => {
+            const isActive = category === selectedCategory;
+            return (
+              <button
+                type="button"
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                style={{
+                  borderRadius: "999px",
+                  padding: "0.45rem 1.1rem",
+                  border: isActive ? "1px solid rgba(31, 187, 164, 0.55)" : "1px solid rgba(18, 58, 50, 0.2)",
+                  background: isActive ? "linear-gradient(135deg, #1fbba4, #8becc5)" : "rgba(255, 255, 255, 0.94)",
+                  color: isActive ? "#ffffff" : "#0f594a",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  boxShadow: isActive ? "0 8px 20px rgba(31, 187, 164, 0.25)" : "none"
+                }}
+              >
+                {category}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {feedback && (
         <div className={`feedback${feedback.type === "error" ? " error" : ""}`}>
           {feedback.message}
         </div>
       )}
 
-      {groupedGifts.map(({ category, items }) => (
-        <section key={category} style={{ display: "grid", gap: "1.8rem" }}>
-          <h2>{category}</h2>
-          <div className="card-grid">
-            {items.map((gift) => {
-              const isReserved = gift.remainingParts === 0;
-              const draft = draftSelections[gift.id] || { parts: 1 };
-              const partsDraft = Math.max(1, Math.min(gift.remainingParts || 1, draft.parts || 1));
-              const priceLabel = gift.price ? gift.price : "";
-              const pricePerPartLabel = gift.totalParts > 1 ? formatPricePerPart(gift.price, gift.totalParts) : "";
-              const contributionTotal = formatContributionTotal(gift.price, gift.totalParts, partsDraft);
-              const partsLabel = gift.totalParts > 1
-                ? `${gift.remainingParts} von ${gift.totalParts} Anteil(en) verfügbar`
-                : isReserved
-                  ? "Bereits reserviert"
-                  : "Noch verfügbar";
-              const inBasket = basket.find((item) => item.giftId === gift.id);
+      {visibleGroups.length === 0 ? (
+        <p>Für diese Kategorie sind momentan keine Geschenke verfügbar.</p>
+      ) : (
+        visibleGroups.map(({ category, items }) => (
+          <section key={category} style={{ display: "grid", gap: "1.8rem" }}>
+            <h2>{category}</h2>
+            <div className="card-grid">
+              {items.map((gift) => {
+                const isReserved = gift.remainingParts === 0;
+                const draft = draftSelections[gift.id] || { parts: 1 };
+                const partsDraft = Math.max(1, Math.min(gift.remainingParts || 1, draft.parts || 1));
+                const priceLabel = gift.price ? gift.price : "";
+                const pricePerPartLabel = gift.totalParts > 1 ? formatPricePerPart(gift.price, gift.totalParts) : "";
+                const contributionTotal = formatContributionTotal(gift.price, gift.totalParts, partsDraft);
+                const partsLabel = gift.totalParts > 1
+                  ? `${gift.remainingParts} von ${gift.totalParts} Anteil(en) verfügbar`
+                  : isReserved
+                    ? "Bereits reserviert"
+                    : "Noch verfügbar";
+                const inBasket = basket.find((item) => item.giftId === gift.id);
 
-              return (
-                <article key={gift.id} className="card" style={{ display: "grid", gap: "0.8rem" }}>
-                  {gift.imageUrl ? (
-                    <img
-                      src={gift.imageUrl}
-                      alt={gift.title}
-                      style={{ width: "100%", borderRadius: "0.6rem", objectFit: "cover", maxHeight: "14rem" }}
-                    />
-                  ) : null}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                    <span className="tag">{partsLabel}</span>
-                    <h3>{gift.title}</h3>
-                    {priceLabel ? (
-                      <strong>
-                        {pricePerPartLabel ? (
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              flexDirection: "column",
-                              gap: "0.2rem",
-                              fontWeight: 600,
-                              lineHeight: 1.2
-                            }}
-                          >
-                            <span>{priceLabel}</span>
+                return (
+                  <article key={gift.id} className="card" style={{ display: "grid", gap: "0.8rem" }}>
+                    {gift.imageUrl ? (
+                      <img
+                        src={gift.imageUrl}
+                        alt={gift.title}
+                        style={{ width: "100%", borderRadius: "0.6rem", objectFit: "cover", maxHeight: "14rem" }}
+                      />
+                    ) : null}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                      <span className="tag">{partsLabel}</span>
+                      <h3>{gift.title}</h3>
+                      {priceLabel ? (
+                        <strong>
+                          {pricePerPartLabel ? (
                             <span
                               style={{
-                                fontSize: "0.85rem",
-                                fontWeight: 500,
-                                color: "rgba(18, 58, 50, 0.75)"
+                                display: "inline-flex",
+                                flexDirection: "column",
+                                gap: "0.2rem",
+                                fontWeight: 600,
+                                lineHeight: 1.2
                               }}
                             >
-                              {pricePerPartLabel}
+                              <span>{priceLabel}</span>
+                              <span
+                                style={{
+                                  fontSize: "0.85rem",
+                                  fontWeight: 500,
+                                  color: "rgba(18, 58, 50, 0.75)"
+                                }}
+                              >
+                                {pricePerPartLabel}
+                              </span>
                             </span>
-                          </span>
-                        ) : priceLabel}
-                      </strong>
-                    ) : null}
-                    <p>{gift.description}</p>
-                    {gift.url ? (
-                      <a href={gift.url} target="_blank" rel="noreferrer" style={{ fontSize: "0.95rem" }}>
-                        Mehr erfahren
-                      </a>
-                    ) : null}
-                  </div>
-
-                  {isReserved ? (
-                    <p style={{ fontStyle: "italic", color: "rgba(18, 58, 50, 0.6)" }}>
-                      Dieses Geschenk wurde bereits vollständig reserviert.
-                    </p>
-                  ) : (
-                    <>
-                      <label>
-                        Anzahl Anteile
-                        <input
-                          type="number"
-                          min={1}
-                          max={gift.remainingParts}
-                          value={partsDraft}
-                          onChange={(event) => handleDraftChange(gift.id, event.target.value)}
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => addToBasket(gift.id)}
-                        className="primary-button"
-                      >
-                        {contributionTotal
-                          ? `Zum Korb hinzufügen - ${contributionTotal}`
-                          : "Zum Korb hinzufügen"}
-                      </button>
-                      {inBasket ? (
-                        <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.7)" }}>
-                          Bereits im Korb: {inBasket.parts} Anteil(e)
-                        </span>
+                          ) : priceLabel}
+                        </strong>
                       ) : null}
-                    </>
-                  )}
-                </article>
-              );
-            })}
-          </div>
-        </section>
-      ))}
+                      <p>{gift.description}</p>
+                      {gift.url ? (
+                        <a href={gift.url} target="_blank" rel="noreferrer" style={{ fontSize: "0.95rem" }}>
+                          Mehr erfahren
+                        </a>
+                      ) : null}
+                    </div>
+
+                    {isReserved ? (
+                      <p style={{ fontStyle: "italic", color: "rgba(18, 58, 50, 0.6)" }}>
+                        Dieses Geschenk wurde bereits vollständig reserviert.
+                      </p>
+                    ) : (
+                      <>
+                        <label>
+                          Anzahl Anteile
+                          <input
+                            type="number"
+                            min={1}
+                            max={gift.remainingParts}
+                            value={partsDraft}
+                            onChange={(event) => handleDraftChange(gift.id, event.target.value)}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => addToBasket(gift.id)}
+                          className="primary-button"
+                        >
+                          {contributionTotal
+                            ? `Zum Korb hinzufügen - ${contributionTotal}`
+                            : "Zum Korb hinzufügen"}
+                        </button>
+                        {inBasket ? (
+                          <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.7)" }}>
+                            Bereits im Korb: {inBasket.parts} Anteil(e)
+                          </span>
+                        ) : null}
+                      </>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ))
+      )}
     </>
   );
 }
