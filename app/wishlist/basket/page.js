@@ -60,7 +60,7 @@ export default function WishlistBasketPage() {
       if (itemsRemoved) {
         setFeedback({
           type: "error",
-          message: "Einige Geschenke sind nicht mehr verfuegbar und wurden aus dem Korb entfernt."
+          message: "Einige Geschenke sind nicht mehr verfügbar und wurden aus dem Korb entfernt."
         });
       }
     } catch (error) {
@@ -203,7 +203,7 @@ export default function WishlistBasketPage() {
       setBasket([]);
       clearBasket();
       setContributor(EMPTY_CONTRIBUTOR);
-      setFeedback({ type: "success", message: data?.message || "Vielen Dank fuer eure Reservierung!" });
+      setFeedback({ type: "success", message: data?.message || "Vielen Dank für eure Reservierung!" });
       fetchGifts();
     } catch (error) {
       setFeedback({ type: "error", message: error.message });
@@ -221,7 +221,7 @@ export default function WishlistBasketPage() {
   return (
     <section style={{ display: "grid", gap: "1.5rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-        <Link href="/wishlist" className="secondary-button">Zurueck zur Wunschliste</Link>
+        <Link href="/wishlist" className="secondary-button">Zurück zur Wunschliste</Link>
         <h1 style={{ margin: 0 }}>Euer Korb</h1>
       </div>
 
@@ -232,7 +232,7 @@ export default function WishlistBasketPage() {
       )}
 
       {basketItems.length === 0 ? (
-        <p>Euer Korb ist leer. Geht zur <Link href="/wishlist">Wunschliste</Link> und fuegt Geschenke hinzu.</p>
+        <p>Euer Korb ist leer. Geht zur <Link href="/wishlist">Wunschliste</Link> und fügt Geschenke hinzu.</p>
       ) : (
         <>
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: "1rem" }}>
@@ -265,7 +265,7 @@ export default function WishlistBasketPage() {
                   </label>
                   <div style={{ display: "grid", gap: "0.25rem" }}>
                     <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.75)" }}>
-                      Verfuegbar: {item.remainingParts} Anteil(e)
+                      verfügbar: {item.remainingParts} Anteil(e)
                     </span>
                     {item.price ? <span style={{ fontWeight: 600 }}>{item.price}</span> : null}
                     {item.pricePerPart ? (
@@ -312,7 +312,7 @@ export default function WishlistBasketPage() {
                 rows={4}
                 value={contributor.message}
                 onChange={(event) => handleContributorChange("message", event.target.value)}
-                placeholder="Ein paar Worte fuer uns"
+                placeholder="Ein paar Worte für uns"
               />
             </label>
 
@@ -331,6 +331,4 @@ export default function WishlistBasketPage() {
     </section>
   );
 }
-
-
 

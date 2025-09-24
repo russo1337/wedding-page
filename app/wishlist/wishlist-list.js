@@ -9,7 +9,7 @@ import {
   saveBasket
 } from "@/lib/wishlist-utils";
 
-const FALLBACK_CATEGORY = "Weitere Wuensche";
+const FALLBACK_CATEGORY = "Weitere Wünsche";
 
 export default function WishlistList() {
   const [gifts, setGifts] = useState([]);
@@ -59,7 +59,7 @@ export default function WishlistList() {
         if (itemsRemoved) {
           return {
             type: "error",
-            message: "Einige Geschenke sind nicht mehr verfuegbar und wurden aus dem Korb entfernt."
+            message: "Einige Geschenke sind nicht mehr verfügbar und wurden aus dem Korb entfernt."
           };
         }
         return current && current.type === "success" ? current : null;
@@ -126,7 +126,7 @@ export default function WishlistList() {
     }
 
     if (gift.remainingParts <= 0) {
-      setFeedback({ type: "error", message: "Dieses Geschenk ist bereits vollstaendig reserviert." });
+      setFeedback({ type: "error", message: "Dieses Geschenk ist bereits vollständig reserviert." });
       return;
     }
 
@@ -148,7 +148,7 @@ export default function WishlistList() {
       [giftId]: { parts }
     }));
 
-    setFeedback({ type: "success", message: `${gift.title} wurde dem Korb hinzugefuegt.` });
+    setFeedback({ type: "success", message: `${gift.title} wurde dem Korb hinzugefügt.` });
   };
 
   if (loading && gifts.length === 0) {
@@ -185,10 +185,10 @@ export default function WishlistList() {
               const pricePerPartLabel = gift.totalParts > 1 ? formatPricePerPart(gift.price, gift.totalParts) : "";
               const contributionTotal = formatContributionTotal(gift.price, gift.totalParts, partsDraft);
               const partsLabel = gift.totalParts > 1
-                ? `${gift.remainingParts} von ${gift.totalParts} Anteil(en) verfuegbar`
+                ? `${gift.remainingParts} von ${gift.totalParts} Anteil(en) verfügbar`
                 : isReserved
                   ? "Bereits reserviert"
-                  : "Noch verfuegbar";
+                  : "Noch verfügbar";
               const inBasket = basket.find((item) => item.giftId === gift.id);
 
               return (
@@ -239,7 +239,7 @@ export default function WishlistList() {
 
                   {isReserved ? (
                     <p style={{ fontStyle: "italic", color: "rgba(18, 58, 50, 0.6)" }}>
-                      Dieses Geschenk wurde bereits vollstaendig reserviert.
+                      Dieses Geschenk wurde bereits vollständig reserviert.
                     </p>
                   ) : (
                     <>
@@ -259,8 +259,8 @@ export default function WishlistList() {
                         className="primary-button"
                       >
                         {contributionTotal
-                          ? `Zum Korb hinzufuegen - ${contributionTotal}`
-                          : "Zum Korb hinzufuegen"}
+                          ? `Zum Korb hinzufügen - ${contributionTotal}`
+                          : "Zum Korb hinzufügen"}
                       </button>
                       {inBasket ? (
                         <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.7)" }}>
