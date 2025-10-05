@@ -239,6 +239,50 @@ fieldset legend {
   border-radius: 28px;
 }
 
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.quantity-input {
+  width: 6rem;
+  text-align: center;
+}
+
+button.quantity-button {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(18, 58, 50, 0.25);
+  background: #ffffff;
+  color: #0f594a;
+  font-size: 1.3rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  box-shadow: none;
+  transition: box-shadow 0.15s ease;
+}
+
+button.quantity-button:hover:not(:disabled) {
+  box-shadow: 0 8px 20px rgba(31, 187, 164, 0.25);
+  transform: none;
+}
+
+button.quantity-button:disabled {
+  background: rgba(18, 58, 50, 0.1);
+  border: 1px solid rgba(18, 58, 50, 0.15);
+  color: rgba(18, 58, 50, 0.4);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
 @media (min-width: 880px) {
   .hero {
     grid-template-columns: 1.15fr 1fr;
@@ -303,6 +347,11 @@ fieldset legend {
 
   section {
     padding: 1rem;
+  }
+
+  .quantity-input {
+    width: 4rem;
+    text-align: center;
   }
 }
 

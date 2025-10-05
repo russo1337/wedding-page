@@ -130,16 +130,34 @@ export default function WishlistList() {
 
   const basketCount = basket.reduce((total, item) => total + (item.parts || 0), 0);
 
-  const handleDraftChange = (giftId, rawValue) => {
+  const updateDraftParts = (giftId, computeValue) => {
     const gift = gifts.find((entry) => entry.id === giftId);
-    const maxParts = gift ? Math.max(1, gift.remainingParts) : 1;
-    const parsed = Number(rawValue);
-    const nextParts = Number.isFinite(parsed) && parsed > 0 ? Math.min(Math.floor(parsed), maxParts) : 1;
+    if (!gift) {
+      return;
+    }
+    const maxParts = Math.max(1, gift.remainingParts || 1);
 
-    setDraftSelections((current) => ({
-      ...current,
-      [giftId]: { parts: nextParts }
-    }));
+    setDraftSelections((current) => {
+      const currentParts = Math.max(1, Math.min(maxParts, current[giftId]?.parts || 1));
+      const rawNext = computeValue(currentParts, maxParts);
+      const parsedNext = Number(rawNext);
+      const nextParts = Number.isFinite(parsedNext) && parsedNext > 0
+        ? Math.min(Math.floor(parsedNext), maxParts)
+        : 1;
+
+      return {
+        ...current,
+        [giftId]: { parts: nextParts }
+      };
+    });
+  };
+
+  const handleDraftChange = (giftId, rawValue) => {
+    updateDraftParts(giftId, () => rawValue);
+  };
+
+  const stepDraftParts = (giftId, delta) => {
+    updateDraftParts(giftId, (currentParts) => currentParts + delta);
   };
 
   const addToBasket = (giftId) => {
@@ -235,6 +253,9 @@ export default function WishlistList() {
                 const isReserved = gift.remainingParts === 0;
                 const draft = draftSelections[gift.id] || { parts: 1 };
                 const partsDraft = Math.max(1, Math.min(gift.remainingParts || 1, draft.parts || 1));
+                const maxParts = Math.max(1, gift.remainingParts || 1);
+                const minusDisabled = partsDraft <= 1;
+                const plusDisabled = partsDraft >= maxParts;
                 const priceLabel = gift.price ? gift.price : "";
                 const pricePerPartLabel = gift.totalParts > 1 ? formatPricePerPart(gift.price, gift.totalParts) : "";
                 const contributionTotal = formatContributionTotal(gift.price, gift.totalParts, partsDraft);
@@ -299,13 +320,35 @@ export default function WishlistList() {
                       <>
                         <label>
                           Anzahl Anteile
-                          <input
-                            type="number"
-                            min={1}
-                            max={gift.remainingParts}
-                            value={partsDraft}
-                            onChange={(event) => handleDraftChange(gift.id, event.target.value)}
-                          />
+                          <div className="quantity-controls">
+                            <button
+                              type="button"
+                              aria-label="Einen Anteil weniger"
+                              onClick={() => stepDraftParts(gift.id, -1)}
+                              disabled={minusDisabled}
+                              className="quantity-button"
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              min={1}
+                              max={maxParts}
+                              value={partsDraft}
+                              onChange={(event) => handleDraftChange(gift.id, event.target.value)}
+                              inputMode="numeric"
+                              className="quantity-input"
+                            />
+                            <button
+                              type="button"
+                              aria-label="Einen Anteil mehr"
+                              onClick={() => stepDraftParts(gift.id, 1)}
+                              disabled={plusDisabled}
+                              className="quantity-button"
+                            >
+                              +
+                            </button>
+                          </div>
                         </label>
                         <button
                           type="button"

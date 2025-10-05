@@ -147,15 +147,36 @@ export default function WishlistBasketPage() {
     }));
   };
 
-  const updateBasketParts = (giftId, rawValue) => {
+  const setBasketParts = (giftId, computeValue) => {
     const gift = gifts.find((entry) => entry.id === giftId);
-    const maxParts = gift ? Math.max(1, gift.remainingParts) : 1;
-    const parsed = Number(rawValue);
-    const nextParts = Number.isFinite(parsed) && parsed > 0 ? Math.min(Math.floor(parsed), maxParts) : 1;
+    if (!gift) {
+      return;
+    }
+    const maxParts = Math.max(1, gift.remainingParts ?? 1);
 
     setBasket((current) =>
-      current.map((item) => (item.giftId === giftId ? { ...item, parts: nextParts } : item))
+      current.map((item) => {
+        if (item.giftId !== giftId) {
+          return item;
+        }
+        const currentParts = Math.max(1, Math.min(maxParts, item.parts || 1));
+        const rawNext = computeValue(currentParts, maxParts);
+        const parsedNext = Number(rawNext);
+        const nextParts = Number.isFinite(parsedNext) && parsedNext > 0
+          ? Math.min(Math.floor(parsedNext), maxParts)
+          : 1;
+
+        return { ...item, parts: nextParts };
+      })
     );
+  };
+
+  const updateBasketParts = (giftId, rawValue) => {
+    setBasketParts(giftId, () => rawValue);
+  };
+
+  const stepBasketParts = (giftId, delta) => {
+    setBasketParts(giftId, (currentParts) => currentParts + delta);
   };
 
   const removeFromBasket = (giftId) => {
@@ -236,50 +257,78 @@ export default function WishlistBasketPage() {
       ) : (
         <>
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: "1rem" }}>
-            {basketItems.map((item) => (
-              <li key={item.giftId} className="card" style={{ display: "grid", gap: "0.55rem", padding: "0.85rem 1.1rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.4rem", flexWrap: "wrap" }}>
-                  <strong>{item.giftTitle}</strong>
-                  <button type="button" className="secondary-button" onClick={() => removeFromBasket(item.giftId)}>
-                    Entfernen
-                  </button>
-                </div>
-                {item.imageUrl ? (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.giftTitle}
-                    style={{ borderRadius: "0.6rem", objectFit: "cover", maxHeight: "10rem" }}
-                  />
-                ) : null}
-                <p style={{ fontSize: "0.95rem", margin: 0 }}>{item.description}</p>
-                <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))" }}>
-                  <label style={{ display: "grid", gap: "0.4rem" }}>
-                    Anteile
-                    <input
-                      type="number"
-                      min={1}
-                      max={item.remainingParts}
-                      value={item.parts}
-                      onChange={(event) => updateBasketParts(item.giftId, event.target.value)}
-                    />
-                  </label>
-                  <div style={{ display: "grid", gap: "0.25rem" }}>
-                    <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.75)" }}>
-                      Verfügbar: {item.remainingParts} Anteil(e)
-                    </span>
-                    {item.price ? <span style={{ fontWeight: 600 }}>{item.price}</span> : null}
-                    {item.pricePerPart ? (
-                      <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.75)" }}>
-                        {item.pricePerPart}
-                      </span>
-                    ) : null}
-                    {item.amountDetails.label ? (
-                      <span style={{ fontWeight: 600 }}>Euer Beitrag: {item.amountDetails.label}</span>
-                    ) : null}
+            {basketItems.map((item) => {
+              const maxParts = Math.max(1, item.remainingParts ?? 1);
+              const minusDisabled = item.parts <= 1;
+              const plusDisabled = item.parts >= maxParts;
+
+              return (
+                <li key={item.giftId} className="card" style={{ display: "grid", gap: "0.55rem", padding: "0.85rem 1.1rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.4rem", flexWrap: "wrap" }}>
+                    <strong>{item.giftTitle}</strong>
+                    <button type="button" className="secondary-button" onClick={() => removeFromBasket(item.giftId)}>
+                      Entfernen
+                    </button>
                   </div>
-                </div>
-              </li>
-            ))}
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.giftTitle}
+                      style={{ borderRadius: "0.6rem", objectFit: "cover", maxHeight: "10rem" }}
+                    />
+                  ) : null}
+                  <p style={{ fontSize: "0.95rem", margin: 0 }}>{item.description}</p>
+                  <div style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))" }}>
+                    <label style={{ display: "grid", gap: "0.4rem" }}>
+                      Anteile
+                      <div className="quantity-controls">
+                        <button
+                          type="button"
+                          aria-label="Einen Anteil weniger"
+                          onClick={() => stepBasketParts(item.giftId, -1)}
+                          disabled={minusDisabled}
+                          className="quantity-button"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          max={maxParts}
+                          value={item.parts}
+                          onChange={(event) => updateBasketParts(item.giftId, event.target.value)}
+                          inputMode="numeric"
+                          className="quantity-input"
+                        />
+                        <button
+                          type="button"
+                          aria-label="Einen Anteil mehr"
+                          onClick={() => stepBasketParts(item.giftId, 1)}
+                          disabled={plusDisabled}
+                          className="quantity-button"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </label>
+                    <div style={{ display: "grid", gap: "0.25rem" }}>
+                      <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.75)" }}>
+                        Verfügbar: {item.remainingParts} Anteil(e)
+                      </span>
+                      {item.price ? <span style={{ fontWeight: 600 }}>{item.price}</span> : null}
+                      {item.pricePerPart ? (
+                        <span style={{ fontSize: "0.9rem", color: "rgba(18, 58, 50, 0.75)" }}>
+                          {item.pricePerPart}
+                        </span>
+                      ) : null}
+                      {item.amountDetails.label ? (
+                        <span style={{ fontWeight: 600 }}>Euer Beitrag: {item.amountDetails.label}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
 
           <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1.5rem" }}>

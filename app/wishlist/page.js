@@ -10,7 +10,7 @@ export default function WishlistPage() {
       <span className="tag">Wunschliste</span>
       <h1>Wählt ein Geschenk aus</h1>
       <p>
-        Euer grösstes Geschenk ist, dass ihr mit uns feiert 🎉. 
+        Euer grösstes Geschenk an uns ist, dass ihr mit uns feiert 🎉. 
         Wer uns darüber hinaus noch eine Freude machen möchte: 
         nach dem Sommerfest starten wir zu einer 6-wöchigen Reise quer durch Italien. 
         Dafür haben wir eine Wunschliste mit kleinen und grösseren Bausteinen erstellt – 
