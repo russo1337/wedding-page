@@ -159,6 +159,7 @@ fieldset legend {
 .card-grid {
   display: grid;
   gap: 1.5rem;
+  min-width: 0;
 }
 
 @media (min-width: 720px) {
@@ -214,12 +215,61 @@ fieldset legend {
 .hero-text {
   display: grid;
   gap: 1.5rem;
+  min-width: 0;
+}
+
+.hero-quote {
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  text-align: center;
+  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: #0f594a;
+  background: rgba(31, 187, 164, 0.1);
+  border-radius: 16px;
 }
 
 .hero-photo {
   position: relative;
   width: min(360px, 100%);
   justify-self: center;
+  min-width: 0;
+}
+
+.hero-subsection {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 1.5rem;
+  padding-top: 0.5rem;
+}
+
+.section-heading {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.subsection-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  line-height: 1.1;
+  color: #0f594a;
+}
+
+.subsection-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  min-width: 3rem;
+  background: linear-gradient(90deg, rgba(31, 187, 164, 0.45), rgba(31, 187, 164, 0.02));
+}
+
+.event-grid {
+  width: 100%;
 }
 
 .hero-photo::after {
@@ -292,6 +342,10 @@ button.quantity-button:disabled {
   .hero-text {
     gap: 1.75rem;
   }
+
+  .hero-subsection {
+    grid-column: 1 / -1;
+  }
 }
 .event-meta {
   font-size: 1.05rem;
@@ -347,6 +401,11 @@ button.quantity-button:disabled {
 
   section {
     padding: 1rem;
+  }
+
+  .subsection-title {
+    gap: 0.75rem;
+    font-size: 1.35rem;
   }
 
   .quantity-input {

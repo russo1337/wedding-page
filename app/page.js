@@ -20,18 +20,14 @@ export default function HomePage() {
         </div>
         <div className="hero-text">
           <span className="tag">3. Oktober 2025</span>
-          <h1>Wir heiraten!</h1>
-          <p>
-            Am 3. Oktober 2025 heiraten wir standesamtlich im kleinen Rahmen. <br />
-            Das grosse Fest für Familie & Freunde folgt im Sommer
+          <h1>Wir haben geheiratet!</h1>
+          <p className="hero-quote">
+            Momente vergehen, doch Erinnerungen bleiben - tief im Herzen, wo sie für immer leuchten.
           </p>
-          <div className="cta-group">
-            <Link href="/wishlist" className="secondary-button">Wunschliste ansehen</Link>
-          </div>
         </div>
         <div className="hero-photo">
           <Image
-            src="/images/kissing.jpg"
+            src="/images/married.jpg"
             alt="Sandra und Riccardo küssend"
             width={360}
             height={320}
@@ -83,19 +79,20 @@ export default function HomePage() {
             priority
           />
         </div>
-      </section>
-
-      <section>
-        <h2>Ablauf Russo's Sommerfest</h2>
-        <div className="card-grid">
-          {weddingEvents.map((event) => (
-            <article key={event.id} className="card">
-              <h3>{event.title}</h3>
-              <p className="event-meta">{`${event.day} - ${event.time}`}</p>
-              <p className="event-location">{event.location}</p>
-              <p>{event.summary}</p>
-            </article>
-          ))}
+        <div className="hero-subsection">
+          <div className="section-heading">
+            <h2 className="subsection-title">Ablauf</h2>
+          </div>
+          <div className="card-grid event-grid">
+            {weddingEvents.map((event) => (
+              <article key={event.id} className="card">
+                <h3>{event.title}</h3>
+                <p className="event-meta">{`${event.day} - ${event.time}`}</p>
+                <p className="event-location">{event.location}</p>
+                <p>{event.summary}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
     </>
