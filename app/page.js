@@ -72,7 +72,7 @@ export default function HomePage() {
         </div>
         <div className="hero-photo">
           <Image
-            src="/images/familie-am-see.jpg"
+            src="/images/fam.jpg"
             alt="Sandra und Riccardo am See"
             width={360}
             height={320}
