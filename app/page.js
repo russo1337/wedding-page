@@ -58,8 +58,8 @@ export default function HomePage() {
             <li>Sonntagmorgen-Brunch</li>
           </ul>
           <p>
-            Wir freuen uns riesig, mit euch zu feiern! Ganz ohne Trauung, weisses Kleid oder klassischen Hochzeitsrahmen - einfach ein Fest mit euch.
-            Alle weiteren Infos folgen - haltet euch das Datum frei...
+            Wir freuen uns riesig, mit euch zu feiern! <br />
+            Ganz ohne Trauung, Dresscode, weisses Kleid oder klassischen Hochzeitsrahmen - einfach ein Fest mit euch.
           </p>
           <div className="cta-group">
             {registrationEnabled ? (
