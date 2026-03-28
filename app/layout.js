@@ -1,9 +1,6 @@
 import "./globals.css";
 import Link from "next/link";
-import { Inter } from "next/font/google";
 import { isRegistrationEnabled } from "@/lib/features";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Hochzeitsfeier von Sandra & Riccardo",
@@ -15,13 +12,14 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="de">
-      <body className={inter.className}>
-        <header>
-          <nav>
-            <Link href="/">
+      <body>
+        <header className="site-header">
+          <nav className="site-nav">
+            <Link href="/" className="site-brand">
+              <span className="site-brand-kicker">Sommerfest 2026</span>
               <strong>Sandra & Riccardo</strong>
             </Link>
-            <ul>
+            <ul className="site-nav-links">
               {registrationEnabled && (
                 <li><Link href="/register">Anmeldung</Link></li>
               )}
@@ -30,10 +28,10 @@ export default function RootLayout({ children }) {
           </nav>
         </header>
         <main>{children}</main>
-        <footer>
-          <div>
-            <span>Wir können es kaum erwarten, mit euch zu feiern!</span>
-            <span>Familie Russo - Südhalde 1, 8586 Ennetaach</span>
+        <footer className="site-footer">
+          <div className="site-footer-inner">
+            <span>Wir koennen es kaum erwarten, mit euch zu feiern!</span>
+            <span>Familie Russo - Suedhalde 1, 8586 Ennetaach</span>
           </div>
         </footer>
       </body>
