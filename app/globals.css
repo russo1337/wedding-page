@@ -272,6 +272,33 @@ fieldset legend {
   width: 100%;
 }
 
+.info-grid {
+  width: 100%;
+}
+
+.info-card {
+  align-content: start;
+}
+
+.info-link {
+  color: #0b7a68;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(11, 122, 104, 0.4);
+  text-underline-offset: 0.18em;
+}
+
+.info-link:hover {
+  color: #095e51;
+  text-decoration-color: currentColor;
+}
+
+@media (min-width: 720px) {
+  .info-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .hero-photo::after {
   content: "";
   position: absolute;

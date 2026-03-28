@@ -89,7 +89,7 @@ export async function POST(request) {
 
   return NextResponse.json(
     {
-      message: "Danke! Eure Anmeldung ist eingegangen. Wir melden uns bald mit weiteren Details.",
+      message: "Danke! Eure Anmeldung ist eingegangen. Wir freuen uns, mit euch zu feiern!",
       registrationId: record.id
     },
     { status: 201 }

@@ -61,24 +61,49 @@ export default function HomePage() {
             Wir freuen uns riesig, mit euch zu feiern! <br />
             Ganz ohne Trauung, Dresscode, weisses Kleid oder klassischen Hochzeitsrahmen - einfach ein Fest mit euch.
           </p>
-          <div className="cta-group">
-            {registrationEnabled ? (
-              <Link href="/register" className="primary-button">Jetzt anmelden</Link>
-            ) : (
-              <span style={{ fontWeight: 600, color: "#0f594a" }}>Die Anmeldung öffnet bald.</span>
-            )}
-            <Link href="/wishlist" className="secondary-button">Wunschliste ansehen</Link>
+          <p>
+            <b>Bitte meldet euch bis zum 31. Mai 2026 an, damit wir besser planen können. </b><br />
+          </p>
+        </div>
+        
+        <div className="hero-subsection">
+          <div className="section-heading">
+            <h2 className="subsection-title">Allgemeine Infos</h2>
+          </div>
+          <div className="card-grid info-grid">
+            <article className="card info-card">
+              <h3>Location</h3>
+              <p>
+                Gefeiert wird im <a className="info-link" href="https://www.eventblumen.ch/eventraum" target="_blank" rel="noreferrer">
+                  Eventraum Eventblumen Andrea Brühlmann
+                </a>
+                .
+              </p>
+            </article>
+            <article className="card info-card">
+              <h3>Parken</h3>
+              <p>Es sind einige Parkplätze vorhanden. Fahrgemeinschaften sind sehr willkommen.</p>
+            </article>
+            <article className="card info-card">
+              <h3>ÖV Verbindung</h3>
+              <p>Zug nach Amriswil und von dort mit dem Bus 943 nach Zihlschlacht Oberdorf. Danach sind es noch etwa 5 Minuten zu Fuss bis zur Location. Die späteste Verbindung zurück fährt um 00:37 Uhr.</p>
+            </article>
+            <article className="card info-card">
+              <h3>Kinder</h3>
+              <p>Für Kinder gibt es viel Programm. Die Betreuung bleibt aber bei den Eltern. Bitte beachtet, dass sich auf der einen Seite eine Hauptstrasse und in der Nähe ein Biotop ohne Absperrung befinden.</p>
+            </article>
+            <article className="card info-card">
+              <h3>Dresscode</h3>
+              <p>Es gibt keinen Dresscode. Kommt einfach so, wie ihr euch wohl fühlt.</p>
+            </article>
+            <article className="card info-card">
+              <h3>Geschenke</h3>
+              <p>Euer grösstes Geschenk ist, dass ihr mit uns feiert 🎉
+Wer uns zusätzlich eine Freude machen möchte: Für unsere 6-wöchige Italienreise nach dem Sommerfest haben wir eine Wunschliste mit kleinen und grossen Erlebnissen erstellt – so begleitet ihr uns auf unserem Abenteuer.</p>
+            </article>
           </div>
         </div>
-        <div className="hero-photo">
-          <Image
-            src="/images/fam.jpg"
-            alt="Sandra und Riccardo am See"
-            width={360}
-            height={320}
-            priority
-          />
-        </div>
+
         <div className="hero-subsection">
           <div className="section-heading">
             <h2 className="subsection-title">Ablauf</h2>
@@ -92,6 +117,17 @@ export default function HomePage() {
                 <p>{event.summary}</p>
               </article>
             ))}
+          </div>
+        </div>
+
+        <div className="hero-subsection">
+          <div className="cta-group">
+            {registrationEnabled ? (
+              <Link href="/register" className="primary-button">Jetzt anmelden</Link>
+            ) : (
+              <span style={{ fontWeight: 600, color: "#0f594a" }}>Die Anmeldung öffnet bald.</span>
+            )}
+            <Link href="/wishlist" className="secondary-button">Wunschliste ansehen</Link>
           </div>
         </div>
       </section>
