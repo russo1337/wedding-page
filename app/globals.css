@@ -214,7 +214,7 @@ fieldset legend {
 }
 .hero-text {
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
   min-width: 0;
 }
 
@@ -367,7 +367,7 @@ button.quantity-button:disabled {
   }
 
   .hero-text {
-    gap: 1.75rem;
+    gap: 1rem;
   }
 
   .hero-subsection {
