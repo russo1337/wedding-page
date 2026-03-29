@@ -18,10 +18,11 @@ function sanitizeRedirect(target) {
   return target;
 }
 
-export default function LoginPage({ searchParams }) {
-  const showError = searchParams?.error === "1";
-  const configError = searchParams?.error === "config";
-  const redirectTo = sanitizeRedirect(searchParams?.from);
+export default async function LoginPage({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
+  const showError = resolvedSearchParams?.error === "1";
+  const configError = resolvedSearchParams?.error === "config";
+  const redirectTo = sanitizeRedirect(resolvedSearchParams?.from);
 
   async function authenticate(formData) {
     "use server";
@@ -41,7 +42,9 @@ export default function LoginPage({ searchParams }) {
     }
 
     if (submittedPassword === expectedPassword) {
-      cookies().set({
+      const cookieStore = await cookies();
+
+      cookieStore.set({
         name: "wedding-auth",
         value: "granted",
         httpOnly: true,
