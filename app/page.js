@@ -48,7 +48,7 @@ export default function HomePage() {
         </div>
         <div className="hero-text">
           <span className="tag">27. & 28. Juni 2026</span>
-          <h1>Russo's Sommerfest</h1>
+          <h1>Russo&apos;s Sommerfest</h1>
           <p>
             Kommt zu einem oder gleich zu mehreren Festblöcken - ganz wie ihr mögt:
           </p>

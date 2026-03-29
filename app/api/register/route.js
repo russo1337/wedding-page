@@ -82,7 +82,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("Failed to append registration to Google Sheets", error);
     return NextResponse.json(
-      { message: "Wir konnten eure Anmeldung nicht speichern. Bitte versucht es spaeter erneut." },
+      { message: "Wir konnten eure Anmeldung nicht speichern. Bitte versucht es später erneut." },
       { status: 500 }
     );
   }

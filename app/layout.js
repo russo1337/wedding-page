@@ -30,8 +30,8 @@ export default function RootLayout({ children }) {
         <main>{children}</main>
         <footer className="site-footer">
           <div className="site-footer-inner">
-            <span>Wir koennen es kaum erwarten, mit euch zu feiern!</span>
-            <span>Familie Russo - Suedhalde 1, 8586 Ennetaach</span>
+            <span>Wir können es kaum erwarten, mit euch zu feiern!</span>
+            <span>Familie Russo - Südhalde 1, 8586 Ennetaach</span>
           </div>
         </footer>
       </body>
