@@ -50,12 +50,13 @@ export default function HomePage() {
           <span className="tag">27. & 28. Juni 2026</span>
           <h1>Russo&apos;s Sommerfest</h1>
           <p>
-            Kommt zu einem oder gleich zu mehreren Festblöcken - ganz wie ihr mögt:
+            Kommt zu einem oder gleich zu mehreren Festblöcken, ganz wie ihr mögt:
           </p>
           <ul>
-            <li>Samstag, Mittag bis Abend</li>
-            <li>Samstagabend</li>
-            <li>Sonntagmorgen-Brunch</li>
+            <li>Samstag: Mittagessen</li>
+            <li>Samstag: Apéro und Kinderprogramm</li>
+            <li>Samstag: Nachtessen und Party</li>
+            <li>Sonntag: Brunch</li>
           </ul>
           <p>
             Wir freuen uns riesig, mit euch zu feiern! <br />
@@ -86,11 +87,11 @@ export default function HomePage() {
             </article>
             <article className="card info-card">
               <h3>ÖV Verbindung</h3>
-              <p>Zug nach Amriswil und von dort mit dem Bus 943 nach Zihlschlacht Oberdorf. Danach sind es noch etwa 5 Minuten zu Fuss bis zur Location. Die späteste Verbindung zurück fährt um 00:37 Uhr.</p>
+              <p>Zug nach Amriswil und von dort mit dem Bus 943 nach Zihlschlacht Oberdorf. Danach sind es noch etwa 5 Minuten zu Fuss bis zur Location. Die späteste Verbindung zurück ist um 00:37 Uhr.</p>
             </article>
             <article className="card info-card">
               <h3>Kinder</h3>
-              <p>Für Kinder gibt es viel Programm. Die Betreuung bleibt aber bei den Eltern. Bitte beachtet, dass sich auf der einen Seite eine Hauptstrasse und in der Nähe ein Biotop ohne Absperrung befinden.</p>
+              <p>Für Kinder gibt es ein schönes Programm. Die Aufsicht liegt bei den Eltern. Bitte achtet auf die nahe Hauptstrasse und das offene Biotop.</p>
             </article>
             <article className="card info-card">
               <h3>Dresscode</h3>
@@ -98,8 +99,7 @@ export default function HomePage() {
             </article>
             <article className="card info-card">
               <h3>Geschenke</h3>
-              <p>Euer grösstes Geschenk ist, dass ihr mit uns feiert 🎉
-Wer uns zusätzlich eine Freude machen möchte: Für unsere 6-wöchige Italienreise nach dem Sommerfest haben wir eine Wunschliste mit kleinen und grossen Erlebnissen erstellt – so begleitet ihr uns auf unserem Abenteuer.</p>
+              <p>Das grösste Geschenk ist, dass ihr mit uns feiert 🎉 Wer uns zusätzlich eine Freude machen möchte, kann uns mit einem Beitrag zu unserer Italienreise beschenken.</p>
             </article>
           </div>
         </div>
