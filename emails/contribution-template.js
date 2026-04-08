@@ -1,3 +1,20 @@
+function escapeHtml(value) {
+  return (value ?? "")
+    .toString()
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderInfoRow(label, value) {
+  return `<div class="info-row">
+    <div class="info-label">${escapeHtml(label)}</div>
+    <div class="info-value">${escapeHtml(value) || "-"}</div>
+  </div>`;
+}
+
 export function renderContributionEmail({
   recipientName,
   recipientEmail,
@@ -6,150 +23,224 @@ export function renderContributionEmail({
   bankIban = "CH42 0023 9239 1023 3340 E",
   bankReference = "Russo Geschenk",
   bankAccountHolder = "Sandra & Riccardo Russo",
+  twintNumber = "+41 79 820 38 99",
+  twintRecipient = "Riccardo",
   message,
   additionalInfo
 }) {
-  const safe = (value) => (value ?? "").toString();
+  const safeName = escapeHtml(recipientName) || "liebe Gäste";
+  const safeMessage = escapeHtml(message);
+  const safeAdditionalInfo = escapeHtml(additionalInfo);
+
   const itemsHtml = items.length
-    ? `<div class="card">
+    ? `<div class="section">
         <h2>Ausgewählte Geschenke</h2>
-        ${items
-          .map(
-            (item) => `<p>
-              <strong>${safe(item.title)}</strong><br/>
-              Anteile: ${safe(item.parts)}${item.amountLabel ? `<br/>Betrag: ${safe(item.amountLabel)}` : ""}
-            </p>`
-          )
-          .join("")}
+        <div class="list">
+          ${items
+            .map((item) => `<div class="list-item">
+              <div class="item-title">${escapeHtml(item.title)}</div>
+              <div class="item-meta">Anteile: ${escapeHtml(item.parts)}</div>
+              ${item.amountLabel ? `<div class="item-meta">Betrag: ${escapeHtml(item.amountLabel)}</div>` : ""}
+            </div>`)
+            .join("")}
+        </div>
       </div>`
     : "";
 
   const totalHtml = totalAmountLabel
-    ? `<div class="card" style="background: rgba(31, 187, 164, 0.08); border-color: rgba(31, 187, 164, 0.25);">
+    ? `<div class="section">
         <h2>Gesamtsumme</h2>
-        <p style="font-weight: 600; font-size: 1.05rem;">${safe(totalAmountLabel)}</p>
+        <p class="total">${escapeHtml(totalAmountLabel)}</p>
       </div>`
     : "";
 
-  const messageHtml = message
-    ? `<p><strong>Nachricht von euch:</strong><br/>${safe(message)}</p>`
+  const messageHtml = safeMessage
+    ? `<div class="section">
+        <h2>Nachricht</h2>
+        <p>${safeMessage}</p>
+      </div>`
+    : "";
+
+  const additionalInfoHtml = safeAdditionalInfo
+    ? `<div class="section">
+        <h2>Weitere Informationen</h2>
+        <p>${safeAdditionalInfo}</p>
+      </div>`
     : "";
 
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Vielen Dank für euren Beitrag</title>
 <style>
   body {
     margin: 0;
-    padding: 2rem;
-    font-family: 'Inter', Arial, sans-serif;
-    background: #f3fbf7;
-    color: #123a32;
+    padding: 24px;
+    font-family: Arial, sans-serif;
+    background: #f4f7f5;
+    color: #17352f;
+  }
+  .wrapper {
+    max-width: 600px;
+    margin: 0 auto;
   }
   .container {
-    max-width: 560px;
-    margin: 0 auto;
     background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 18px 40px rgba(18, 58, 50, 0.12);
+    border: 1px solid #d9e6e0;
+    border-radius: 16px;
     overflow: hidden;
   }
   .header {
-    padding: 2.5rem 2.5rem 1.5rem;
-    background: linear-gradient(135deg, #8becc5, #1fbba4);
+    padding: 32px 32px 24px;
+    background: #1f6f5f;
     color: #ffffff;
   }
   .header h1 {
-    margin: 0 0 0.5rem;
-    font-size: 1.75rem;
+    margin: 0 0 8px;
+    font-size: 28px;
+    line-height: 1.2;
   }
   .header p {
     margin: 0;
-    font-size: 1rem;
-    opacity: 0.9;
+    font-size: 16px;
+    line-height: 1.5;
   }
   .content {
-    padding: 2.5rem;
+    padding: 32px;
+  }
+  .intro {
+    margin: 0 0 24px;
+    font-size: 16px;
     line-height: 1.6;
   }
-  h2 {
-    font-size: 1.25rem;
-    margin-top: 2rem;
-    margin-bottom: 0.5rem;
-    color: #0f594a;
+  .section {
+    margin-top: 16px;
+    padding: 20px;
+    background: #f8fbf9;
+    border: 1px solid #d9e6e0;
+    border-radius: 12px;
   }
-  .card {
-    background: #f3fbf7;
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-top: 1rem;
-    border: 1px solid rgba(18, 90, 67, 0.18);
+  .section h2 {
+    margin: 0 0 16px;
+    font-size: 18px;
+    line-height: 1.3;
+    color: #1f6f5f;
   }
-  .banking {
-    background: #ffffff;
-    border: 1px solid rgba(18, 90, 67, 0.15);
-    border-radius: 16px;
-    padding: 1.5rem;
+  .section p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
   }
-  .banking dt {
-    font-weight: 600;
-    color: #0f594a;
+  .info-row {
+    padding: 10px 0;
+    border-top: 1px solid #d9e6e0;
   }
-  .banking dd {
-    margin: 0 0 0.75rem;
+  .info-row:first-child {
+    padding-top: 0;
+    border-top: 0;
   }
-  .cta {
-    margin-top: 2.5rem;
-    padding: 1.75rem;
-    text-align: center;
-    background: rgba(18, 90, 67, 0.08);
-    border-radius: 16px;
+  .info-label {
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f6f5f;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
-  .cta strong {
-    color: #0f594a;
+  .info-value {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .list {
+    display: block;
+  }
+  .list-item {
+    padding: 12px 0;
+    border-top: 1px solid #d9e6e0;
+  }
+  .list-item:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+  .item-title {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .item-meta {
+    margin-top: 4px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #45635b;
+  }
+  .total {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f6f5f;
+  }
+  .footer {
+    padding: 24px 32px 32px;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .footer p {
+    margin: 0 0 12px;
+  }
+  .footer p:last-child {
+    margin-bottom: 0;
   }
   @media (max-width: 600px) {
     body {
-      padding: 1rem;
+      padding: 12px;
     }
-    .content, .header {
-      padding: 1.75rem;
+    .header,
+    .content,
+    .footer {
+      padding-left: 20px;
+      padding-right: 20px;
     }
   }
 </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Danke euch, ${safe(recipientName) || "liebe Gäste"}!</h1>
-      <p>Wir freuen uns riesig über euren Beitrag zu unserem Fest.</p>
-    </div>
-    <div class="content">
-      <p>Ihr habt für uns eine Auswahl an Geschenken reserviert. Das bedeutet uns unglaublich viel - vielen Dank für eure Unterstützung!</p>
-      <div class="card">
-        <h2>Eure Angaben</h2>
-        <p><strong>Name:</strong> ${safe(recipientName) || "-"}</p>
-        <p><strong>E-Mail:</strong> ${safe(recipientEmail) || "-"}</p>
-        ${messageHtml}
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <h1>Danke euch, ${safeName}!</h1>
+        <p>Wir freuen uns sehr über euren Beitrag zu unserem Fest.</p>
       </div>
-      ${itemsHtml}
-      ${totalHtml}
-      <h2>Zahlungsinformationen</h2>
-      <dl class="banking">
-        <dt>Kontoinhaber:in</dt>
-        <dd>${safe(bankAccountHolder)}</dd>
-        <dt>IBAN</dt>
-        <dd>${safe(bankIban)}</dd>
-        <dt>Zahlungsreferenz</dt>
-        <dd>${safe(bankReference)}</dd>
-      </dl>
-      ${additionalInfo ? `<div class="card">${safe(additionalInfo)}</div>` : ""}
-      <div class="cta">
-        <p>Falls ihr Fragen habt oder etwas ändern möchtet, meldet euch jederzeit.
-        Wir freuen uns schon sehr darauf, mit euch anzustossen!</p>
-        <p><strong>Herzlich,<br/>Sandra & Riccardo</strong></p>
+
+      <div class="content">
+        <p class="intro">Ihr habt für uns eine Auswahl an Geschenken reserviert. Vielen Dank für eure Unterstützung.</p>
+
+        <div class="section">
+          <h2>Eure Angaben</h2>
+          ${renderInfoRow("Name", recipientName)}
+          ${renderInfoRow("E-Mail", recipientEmail)}
+        </div>
+
+        ${messageHtml}
+        ${itemsHtml}
+        ${totalHtml}
+
+        <div class="section">
+          <h2>Zahlungsinformationen</h2>
+          ${renderInfoRow("TWINT Empfänger", twintRecipient)}
+          ${renderInfoRow("TWINT Nummer", twintNumber)}
+          ${renderInfoRow("TWINT Referenz", bankReference)}
+          ${renderInfoRow("Kontoinhaber", bankAccountHolder)}
+          ${renderInfoRow("IBAN", bankIban)}
+          ${renderInfoRow("Bank Referenz", bankReference)}
+        </div>
+
+        ${additionalInfoHtml}
+      </div>
+
+      <div class="footer">
+        <p>Falls ihr Fragen habt oder etwas ändern möchtet, meldet euch jederzeit.</p>
+        <p><strong>Herzlich<br />Sandra & Riccardo</strong></p>
       </div>
     </div>
   </div>

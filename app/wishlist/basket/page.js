@@ -371,6 +371,24 @@ export default function WishlistBasketPage() {
               </div>
             ) : null}
 
+            <div className="card" style={{ display: "grid", gap: "0.6rem" }}>
+              <h2 style={{ margin: 0 }}>Zahlungsmöglichkeiten</h2>
+              <p style={{ margin: 0 }}>
+                Ihr könnt euren Beitrag entweder per TWINT an <strong>Riccardo</strong> senden:
+                <br />
+                <strong>+41 79 820 38 99</strong>
+                <br />
+                <strong>Referenz:</strong> Russo Geschenk
+              </p>
+              <p style={{ margin: 0 }}>
+                Alternativ per Banküberweisung an <strong>Sandra & Riccardo Russo</strong>:
+                <br />
+                <strong>IBAN:</strong> CH42 0023 9239 1023 3340 E
+                <br />
+                <strong>Referenz:</strong> Russo Geschenk
+              </p>
+            </div>
+
             <button type="submit" disabled={!canSubmit || isSubmitting}>
               {isSubmitting ? "Reservierung wird gesendet..." : "Reservierung abschicken"}
             </button>
