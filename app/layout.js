@@ -1,6 +1,6 @@
 import "./globals.css";
-import Link from "next/link";
 import { isRegistrationEnabled } from "@/lib/features";
+import SiteHeader from "./site-header";
 
 export const metadata = {
   title: "Hochzeitsfeier von Sandra & Riccardo",
@@ -13,20 +13,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="de">
       <body>
-        <header className="site-header">
-          <nav className="site-nav">
-            <Link href="/" className="site-brand">
-              <span className="site-brand-kicker">Sommerfest 2026</span>
-              <strong>Sandra & Riccardo</strong>
-            </Link>
-            <ul className="site-nav-links">
-              {registrationEnabled && (
-                <li><Link href="/register">Anmeldung</Link></li>
-              )}
-              <li><Link href="/wishlist">Wunschliste</Link></li>
-            </ul>
-          </nav>
-        </header>
+        <SiteHeader registrationEnabled={registrationEnabled} />
         <main>{children}</main>
         <footer className="site-footer">
           <div className="site-footer-inner">
