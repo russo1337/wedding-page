@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatContributionTotal,
@@ -128,8 +127,6 @@ export default function WishlistList() {
     return groupedGifts.filter((group) => group.category === selectedCategory);
   }, [groupedGifts, selectedCategory]);
 
-  const basketCount = basket.reduce((total, item) => total + (item.parts || 0), 0);
-
   const updateDraftParts = (giftId, computeValue) => {
     const gift = gifts.find((entry) => entry.id === giftId);
     if (!gift) {
@@ -203,10 +200,8 @@ export default function WishlistList() {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem" }}>
-        <Link href="/wishlist/basket" className="primary-button">
-          {basketCount > 0 ? `Zum Korb (${basketCount})` : "Zum Korb"}
-        </Link>
+      <div style={{ marginBottom: "1rem" }}>
+        <h2 style={{ margin: 0 }}>Kategorien</h2>
       </div>
 
       {categories.length > 1 && (
