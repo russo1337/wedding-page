@@ -15,8 +15,9 @@ export default function RegisterPage() {
         <span className="tag">Anmeldung</span>
         <h1>Die Anmeldung ist geschlossen</h1>
         <p>
-          Vielen Dank für euer Interesse. Im Moment nehmen wir keine weiteren Anmeldungen entgegen.
-          Schaut gern später noch einmal vorbei oder meldet euch direkt bei uns, falls ihr Fragen habt.
+          Die reguläre Anmeldung ist abgeschlossen. Wenn ihr noch teilnehmen möchtet,
+          meldet euch bitte direkt bei uns, damit wir prüfen können, ob eine Anmeldung
+          noch möglich ist.
         </p>
       </section>
     );

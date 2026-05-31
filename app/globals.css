@@ -101,6 +101,19 @@ main {
   transform: translateY(-1px);
 }
 
+.site-nav-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  color: #0f594a;
+  font-size: 0.92rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 button,
 .primary-button,
 .secondary-button {

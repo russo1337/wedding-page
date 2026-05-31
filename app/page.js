@@ -125,7 +125,9 @@ export default function HomePage() {
             {registrationEnabled ? (
               <Link href="/register" className="primary-button">Jetzt anmelden</Link>
             ) : (
-              <span style={{ fontWeight: 600, color: "#0f594a" }}>Die Anmeldung öffnet bald.</span>
+              <span style={{ fontWeight: 600, color: "#0f594a" }}>
+                Die Anmeldung ist geschlossen. Meldet euch bitte direkt bei uns, damit wir prüfen können, ob eine Anmeldung noch möglich ist.
+              </span>
             )}
             <Link href="/wishlist" className="secondary-button">Wunschliste ansehen</Link>
           </div>

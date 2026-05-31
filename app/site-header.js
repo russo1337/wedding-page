@@ -36,8 +36,12 @@ export default function SiteHeader({ registrationEnabled }) {
           <strong>Sandra & Riccardo</strong>
         </Link>
         <ul className="site-nav-links">
-          {registrationEnabled && (
+          {registrationEnabled ? (
             <li><Link href="/register">Anmeldung</Link></li>
+          ) : (
+            <li>
+              <span className="site-nav-note">Anmeldung geschlossen</span>
+            </li>
           )}
           <li><Link href="/wishlist">Wunschliste</Link></li>
           {showBasketLink ? (
